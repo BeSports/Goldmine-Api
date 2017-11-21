@@ -1,6 +1,6 @@
 {
   "name": "goldmine-api",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Goldmine query language to optimize querying Orient databases Edit",
   "main": "./build/orient.js",
   "scripts": {
@@ -20,7 +20,8 @@
   "dependencies": {
     "bson": "^1.0.4",
     "lodash": "^4.17.4",
-    "orientjs": "^2.2.7"
+    "orientjs": "^2.2.7",
+    "regenerator-runtime": "^0.11.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
