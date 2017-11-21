@@ -3,6 +3,21 @@
 With Goldmine-Api we provide an easy way to query OrientDB in any nodejs project. This way you can transition easily
 from another database language such as MongoDB without having to dig through all the documentation before getting started.
 
+* [Usage](#usage)
+* [Important](#important)
+* [Functions](#functions)
+  * [findOne(queryObject)](#findonequeryobject)
+  * [find(queryObject)](#findqueryobject)
+  * [findEdge(edgeObject)](#findedgeedgeobject)
+  * [updateOne(queryObject, mergeObject)](#updateonequeryobject-mergeobject)
+  * [update(queryObject, mergeObject)](#updatequeryobject-mergeobject)
+  * [updateEdge(queryObject, mergeObject)](#updateedgequeryobject-mergeobject)
+  * [delete(queryObject)](#deletequeryobject)
+  * [deleteEdge(edgeObject)](#deleteedgeedgeobject)
+  * [insertOne(insertObject)](#insertoneinsertobject)
+  * [insertEdge(s)(edgesObject)](#insertedgesedgesobject)
+
+
 # Usage
 In our example we use this in an express based api.
 
@@ -36,9 +51,6 @@ After this import you can use all functions defined down below by calling them w
 Also when using dates please define this fields in the orient studio before inserting into them.
 
 # Functions
-* to be linked
-
-
 ## findOne(queryObject)
 ```
 const result = await global.db.findOne({
