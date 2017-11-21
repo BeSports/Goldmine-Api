@@ -1,11 +1,12 @@
 {
   "name": "goldmine-api",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Goldmine query language to optimize querying Orient databases Edit",
   "main": "./build/orient.js",
   "scripts": {
     "build": "babel src -d build",
-    "prebuild": "rimraf build"
+    "prebuild": "rimraf build",
+    "prepublish": "yarn build"
   },
   "repository": "https://github.com/BeSports/Goldmine-Api.git",
   "bugs": {
