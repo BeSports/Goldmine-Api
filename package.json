@@ -1,6 +1,6 @@
 {
   "name": "goldmine-api",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Goldmine query language to optimize querying Orient databases Edit",
   "main": "./build/orient.js",
   "scripts": {
@@ -19,10 +19,10 @@
   "author": "Michiel Cuvelier <michiel@kayzr.com>",
   "license": "LGPL-3.0",
   "dependencies": {
+    "babel-runtime": "^6.26.0",
     "bson": "^1.0.4",
     "lodash": "^4.17.4",
-    "orientjs": "^2.2.7",
-    "regenerator-runtime": "^0.11.0"
+    "orientjs": "^2.2.7"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
