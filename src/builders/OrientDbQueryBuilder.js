@@ -561,8 +561,6 @@ const deleteEdge = edgeObject => {
   if (edgeObject.params) {
     fromStmt += buildWhereStmt(edgeObject, '');
   }
-  console.log(fromStmt);
-  console.log(toStmt);
 
   // Add statement
   statement = `DELETE EDGE  ${fromStmt
