@@ -543,13 +543,13 @@ const deleteEdge = edgeObject => {
     console.log(`No edge name was provided to ${edgeObject}`);
   }
   let collectionStmt = null;
-  let whereStmt = '';
+  collectionStmt = edgeObject.edge;
+  let whereStmt = ` @class = \'${collectionStmt}\' `;
   let fromStmt = '';
   let toStmt = '';
 
   // TOP LEVEL
   // from statement
-  collectionStmt = edgeObject.edge;
 
   // create from, to and where statements
   if (edgeObject.from) {
@@ -565,7 +565,7 @@ const deleteEdge = edgeObject => {
   console.log(toStmt);
 
   // Add statement
-  statement = `DELETE EDGE \`${collectionStmt}\` ${fromStmt
+  statement = `DELETE EDGE  ${fromStmt
     ? 'FROM (' + fromStmt + ') '
     : ''} ${toStmt ? 'TO (' + toStmt + ') ' : ''}  ${whereStmt ? 'WHERE ' + whereStmt : ''}`;
 
