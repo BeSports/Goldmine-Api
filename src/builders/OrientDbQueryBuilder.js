@@ -1,8 +1,10 @@
 const _ = require('lodash');
 let tempParams = [];
 
-const selectBuilder = template => {
-  tempParams = [];
+const selectBuilder = (template, noClear) => {
+  if (!noClear) {
+    tempParams = [];
+  }
   let statement;
   if (typeof template === 'string') {
     return {
@@ -172,22 +174,22 @@ const edgesBuilder = (edgesObject, extraCollection) => {
   let query = '';
   _.map(edgesObject, (eo, i) => {
     let edgeQuery = `let $${i} = CREATE edge ${eo.edge ||
-    `${_.get(eo, 'from.collection', extraCollection)}_${_.get(
-      eo,
-      'to.collection',
-      extraCollection,
-    )}`} from ${eo.from
+      `${_.get(eo, 'from.collection', extraCollection)}_${_.get(
+        eo,
+        'to.collection',
+        extraCollection,
+      )}`} from ${eo.from
       ? `(select from \`${eo.from.collection}\` WHERE ${buildWhereStmt(eo.from)} ${buildOrderByStmt(
-        eo.from,
-      )
-        ? 'ORDER BY ' + buildOrderByStmt(eo.from)
-        : ''} ${buildPaginationStmt(eo.from)})`
+          eo.from,
+        )
+          ? 'ORDER BY ' + buildOrderByStmt(eo.from)
+          : ''} ${buildPaginationStmt(eo.from)})`
       : '$vert'} TO ${eo.to
       ? `(select from \`${eo.to.collection}\` WHERE ${buildWhereStmt(eo.to)} ${buildOrderByStmt(
-        eo.to,
-      )
-        ? 'ORDER BY ' + buildOrderByStmt(eo.to)
-        : ''} ${buildPaginationStmt(eo.to)})`
+          eo.to,
+        )
+          ? 'ORDER BY ' + buildOrderByStmt(eo.to)
+          : ''} ${buildPaginationStmt(eo.to)})`
       : '$vert'}${eo.content ? ` CONTENT ${JSON.stringify(eo.content)}` : ''};\n`;
     query += edgeQuery;
   });
@@ -549,18 +551,23 @@ const deleteEdge = edgeObject => {
   // from statement
   collectionStmt = edgeObject.edge;
 
-
   // create from, to and where statements
   if (edgeObject.from) {
-    fromStmt += selectBuilder(edgeObject.from);
-  }if (edgeObject.to) {
-    toStmt += selectBuilder(edgeObject.to);
-  }if (edgeObject.params) {
+    fromStmt += selectBuilder(edgeObject.from, true).statement;
+  }
+  if (edgeObject.to) {
+    toStmt += selectBuilder(edgeObject.to, true).statement;
+  }
+  if (edgeObject.params) {
     fromStmt += buildWhereStmt(edgeObject, '');
   }
+  console.log(fromStmt);
+  console.log(toStmt);
 
   // Add statement
-  statement = `DELETE EDGE \`${collectionStmt}\` ${fromStmt ? 'FROM ' + fromStmt : ''} ${toStmt ? 'TO ' + toStmt : ''}  ${whereStmt ? 'WHERE ' + whereStmt : ''}`;
+  statement = `DELETE EDGE \`${collectionStmt}\` ${fromStmt
+    ? 'FROM (' + fromStmt + ') '
+    : ''} ${toStmt ? 'TO (' + toStmt + ') ' : ''}  ${whereStmt ? 'WHERE ' + whereStmt : ''}`;
 
   return {
     statement,
