@@ -540,26 +540,27 @@ const deleteEdge = edgeObject => {
   if (!edgeObject.edge && global.logging) {
     console.log(`No edge name was provided to ${edgeObject}`);
   }
-  let fromStmt = null;
+  let collectionStmt = null;
   let whereStmt = '';
+  let fromStmt = '';
+  let toStmt = '';
 
   // TOP LEVEL
   // from statement
-  fromStmt = edgeObject.edge;
+  collectionStmt = edgeObject.edge;
 
-  // where statement
+
+  // create from, to and where statements
   if (edgeObject.from) {
-    whereStmt += edgeWhereBuilder(edgeObject.from, 'out');
-  }
-  if (edgeObject.to) {
-    if (whereStmt !== '') {
-      whereStmt += ' AND ';
-    }
-    whereStmt += edgeWhereBuilder(edgeObject.to, 'in');
+    fromStmt += selectBuilder(edgeObject.from);
+  }if (edgeObject.to) {
+    toStmt += selectBuilder(edgeObject.to);
+  }if (edgeObject.params) {
+    fromStmt += buildWhereStmt(edgeObject, '');
   }
 
   // Add statement
-  statement = `DELETE EDGE \`${fromStmt}\` ${whereStmt ? 'WHERE ' + whereStmt : ''}`;
+  statement = `DELETE EDGE \`${collectionStmt}\` ${fromStmt ? 'FROM ' + fromStmt : ''} ${toStmt ? 'TO ' + toStmt : ''}  ${whereStmt ? 'WHERE ' + whereStmt : ''}`;
 
   return {
     statement,
