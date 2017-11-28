@@ -9,7 +9,7 @@ const update = async (db, queryObject, mergeObject, logQuery) => {
     console.log(query);
   }
   const res = await resolver(db, query.statement, query.statementParams, queryObject, false);
-  return _.first(res);
+  return res;
 };
 
 module.exports = update;
