@@ -1,6 +1,6 @@
 {
   "name": "goldmine-api",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Goldmine query language to optimize querying Orient databases Edit",
   "main": "./build/orient.js",
   "scripts": {
@@ -12,14 +12,16 @@
   "bugs": {
     "url": "https://github.com/BeSports/Goldmine-Api/issues"
   },
-  "keywords": ["goldmine", "OrientDB"],
+  "keywords": [
+    "goldmine",
+    "OrientDB"
+  ],
   "author": "Michiel Cuvelier <michiel@kayzr.com>",
   "license": "LGPL-3.0",
   "dependencies": {
     "babel-runtime": "^6.26.0",
     "bson": "^1.0.4",
-    "lodash": "^4.17.4",
-    "orientjs": "^2.2.7"
+    "lodash": "^4.17.4"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -33,6 +35,10 @@
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-node": "^5.2.1",
-    "rimraf": "^2.6.2"
+    "rimraf": "^2.6.2",
+    "orientjs": "^2.2.7"
+  },
+  "peerDependencies": {
+    "orientjs": "^2.2.7"
   }
 }

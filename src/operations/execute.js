@@ -2,8 +2,9 @@ const queryObjectValidator = require('../queryObject');
 const { selectBuilder } = require('../builders/OrientDbQueryBuilder');
 const resolver = require('../resolvers/OrientDbQueryResolver');
 
-const execute = async (query, params) => {
-  const res = await resolver(query, params, {}, false);
+const execute = async (db, query, params) => {
+  console.log(this);
+  const res = await resolver(db, query, params, {}, false);
   return res;
 };
 

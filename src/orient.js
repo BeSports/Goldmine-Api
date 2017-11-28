@@ -18,10 +18,10 @@ const connect = (dbConfig, cb) => {
   const server = OrientDB({
     username: dbConfig.username,
     password: dbConfig.password,
-    servers: dbConfig.servers
+    servers: dbConfig.servers,
   });
 
-  server.transport.connection.on('event', (error) => {
+  server.transport.connection.on('event', error => {
     if (global.logging) {
       console.log('GOLDMINE API: socket event %s', error.code);
     }
@@ -30,22 +30,21 @@ const connect = (dbConfig, cb) => {
   const db = server.use({
     name: dbConfig.databaseName,
     username: dbConfig.username,
-    password: dbConfig.password
+    password: dbConfig.password,
   });
 
-  db.findOne = findOne;
-  db.find = find;
-  db.findEdge = findEdge;
-  db.updateOne = updateOne;
-  db.updateEdge = updateEdge;
-  db.update = update;
-  db.deleteOne = deleteOne;
-  db.delete = del;
-  db.deleteEdge = deleteEdge;
-  db.insertOne = insertOne;
-  db.insertEdges = insertEdges;
-  db.execute = execute;
-
+  db.findOne = findOne.bind(null, db);
+  db.find = find.bind(null, db);
+  db.findEdge = findEdge.bind(null, db);
+  db.updateOne = updateOne.bind(null, db);
+  db.updateEdge = updateEdge.bind(null, db);
+  db.update = update.bind(null, db);
+  db.deleteOne = deleteOne.bind(null, db);
+  db.delete = del.bind(null, db);
+  db.deleteEdge = deleteEdge.bind(null, db);
+  db.insertOne = insertOne.bind(null, db);
+  db.insertEdges = insertEdges.bind(null, db);
+  db.execute = execute.bind(null, db);
 
   // ---------------------------------------------------------------------------------------------------------------------
   // ---------------------------------------------------------------------------------------------------------------------

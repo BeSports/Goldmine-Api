@@ -1,15 +1,15 @@
 const _ = require('lodash');
-const resolve = async (query, params, template, shouldSelect) => {
+const resolve = async (db, query, params, template, shouldSelect) => {
   let data;
   const n = new Date().getTime();
   if (_.get(params, 'class') === 's') {
-    data = await global.db.query(query, { class: 's' });
+    data = await db.query(query, { class: 's' });
   } else {
-    data = await global.db.query(query, { params });
+    data = await db.query(query, { params });
   }
   const m = new Date().getTime();
   if (m - n > 1000 && global.logging) {
-    console.log('GOLDMINE API: ')
+    console.log('GOLDMINE API: ');
     console.log('Querry took: ', m - n, 'ms');
     console.log('long query:  ', query);
     console.log('params of:  ', params);
@@ -97,11 +97,10 @@ const flattenExtend = extend => {
     const newExtends = _.flatten(
       _.map(extend, e => {
         // ANDS and deeper levels :33: deeper
-        if(e instanceof Array) {
+        if (e instanceof Array) {
           return flattenExtend(e);
-        }
-        //ORS
-        else {
+        } else {
+          //ORS
           extendArray.push(e);
           return flattenExtend(e.extend);
         }
