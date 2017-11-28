@@ -1,4 +1,5 @@
 const OrientDB = require('orientjs');
+const _ = require('lodash');
 
 const findOne = require('./operations/findOne');
 const findEdge = require('./operations/findEdge');
@@ -19,6 +20,7 @@ const connect = (dbConfig, cb) => {
     username: dbConfig.username,
     password: dbConfig.password,
     servers: dbConfig.servers,
+    host: dbConfig.host || _.first(dbConfig.servers).host,
   });
 
   server.transport.connection.on('event', error => {
