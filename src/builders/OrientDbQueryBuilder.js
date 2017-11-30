@@ -275,7 +275,7 @@ const buildSelectStmt = (template, parent) => {
   if (template.target !== undefined) {
     const edge = (parent ? parent + '.' : '') + buildEdge(template.relation, template.direction);
     if (template.fields !== null) {
-      res += `${edge}._id AS \`${_.replace(template.target, '.', '§')}§_id\``;
+      res += `${edge}["_id"] AS \`${_.replace(template.target, '.', '§')}§_id\``;
 
       _.forEach(template.fields, field => {
         if (field === '_id') {
