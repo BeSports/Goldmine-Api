@@ -486,7 +486,8 @@ const buildContent = mergeObject => {
 const obejctToCommaEquals = object => {
   return _.join(
     _.map(object, (value, key) => {
-      return ` ${key} = ${value} `;
+      const tempParamIndex = setNextParamAvailable(value);
+      return ` ${key} = :goldmine${tempParamIndex} `;
     }),
     ', ',
   );
@@ -563,9 +564,9 @@ const deleteEdge = edgeObject => {
   }
 
   // Add statement
-  statement = `DELETE EDGE  ${fromStmt
-    ? 'FROM (' + fromStmt + ') '
-    : ''} ${toStmt ? 'TO (' + toStmt + ') ' : ''}  ${whereStmt ? 'WHERE ' + whereStmt : ''}`;
+  statement = `DELETE EDGE  ${fromStmt ? 'FROM (' + fromStmt + ') ' : ''} ${toStmt
+    ? 'TO (' + toStmt + ') '
+    : ''}  ${whereStmt ? 'WHERE ' + whereStmt : ''}`;
 
   return {
     statement,
