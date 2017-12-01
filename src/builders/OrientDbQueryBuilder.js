@@ -509,7 +509,7 @@ const updateEdgeBuilder = (edgeObject, mergeObject) => {
     whereStmt += edgeWhereBuilder(edgeObject.to, 'in');
   }
 
-  const statement = `UPDATE edge ${edgeObject.collection} ${buildContent(
+  const statement = `UPDATE edge ${edgeObject.edge} ${buildContent(
     mergeObject,
   )} WHERE ${whereStmt}`;
 
