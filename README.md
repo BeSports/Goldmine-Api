@@ -164,7 +164,7 @@ const result = await global.db.update(
 ```
 const result = await global.db.updateEdge(
   {
-    collection: 'user_teamSize',
+    edge: 'user_teamSize',
     from: {
       collection: 'user',
       params: {
