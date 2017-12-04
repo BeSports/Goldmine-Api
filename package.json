@@ -1,6 +1,6 @@
 {
   "name": "goldmine-api",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Goldmine query language to optimize querying Orient databases Edit",
   "main": "./build/orient.js",
   "scripts": {
@@ -36,7 +36,6 @@
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-node": "^5.2.1",
-    "rimraf": "^2.6.2",
-    "orientjs": "^2.2.7"
+    "rimraf": "^2.6.2"
   }
 }

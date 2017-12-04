@@ -166,7 +166,7 @@ const insertBuilder = insertObject => {
     insertObject.value,
   )};\n`;
   query += edgesBuilder(insertObject.edges, insertObject.collection);
-  query += 'commit retry 100\nreturn $vert\n';
+  query += 'commit \nreturn $vert\n';
   return query;
 };
 
@@ -207,7 +207,7 @@ const pureEdgesBuilder = edgeObject => {
   tempParams = [];
   let query = 'begin\n';
   query += edgesBuilder(edgeObject);
-  query += 'commit retry 100\nreturn $vert\n';
+  query += 'commit \nreturn $vert\n';
   return query;
 };
 
