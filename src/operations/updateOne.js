@@ -5,7 +5,7 @@ const _ = require('lodash');
 
 const findOne = async (db, queryObject, mergeObject, logQuery) => {
   const query = updateBuilder(queryObject, mergeObject);
-  if (logQuery) {
+  if (logQuery === true) {
     console.log(query);
   }
   const res = await resolver(
@@ -14,6 +14,7 @@ const findOne = async (db, queryObject, mergeObject, logQuery) => {
     query.statementParams,
     queryObject,
     false,
+    logQuery,
   );
   return _.first(res);
 };

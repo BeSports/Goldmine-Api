@@ -5,10 +5,10 @@ const _ = require('lodash');
 
 const findEdge = async (db, queryObject, logQuery) => {
   const query = edgeFinder(queryObject);
-  if (logQuery) {
+  if (logQuery === true) {
     console.log(query);
   }
-  const res = await resolver(db, query.statement, query.statementParams, {}, false);
+  const res = await resolver(db, query.statement, query.statementParams, {}, false, logQuery);
   return res;
 };
 

@@ -4,10 +4,10 @@ const _ = require('lodash');
 
 const insertEdge = async (db, edgesObject, logQuery) => {
   const query = pureEdgesBuilder(edgesObject);
-  if (logQuery) {
+  if (logQuery === true) {
     console.log(query);
   }
-  const res = await resolver(db, query, { class: 's' }, {}, true);
+  const res = await resolver(db, query, { class: 's' }, {}, true, logQuery);
   return _.first(res);
 };
 

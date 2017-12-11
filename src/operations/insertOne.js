@@ -8,10 +8,10 @@ const insertOne = async (db, insertObject, logQuery) => {
     _.set(insertObject, 'value._id', id);
   }
   const query = insertBuilder(insertObject);
-  if (logQuery) {
+  if (logQuery === true) {
     console.log(query);
   }
-  const res = await resolver(db, query, { class: 's' }, {}, true);
+  const res = await resolver(db, query, { class: 's' }, {}, true, logQuery);
   return _.first(res);
 };
 

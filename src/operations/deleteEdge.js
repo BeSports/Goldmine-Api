@@ -5,10 +5,10 @@ const _ = require('lodash');
 
 const deleteOne = async (db, queryObject, logQuery) => {
   const query = deleteEdge(queryObject);
-  if (logQuery) {
+  if (logQuery === true) {
     console.log(query);
   }
-  const res = await resolver(db, query.statement, query.statementParams, {}, false);
+  const res = await resolver(db, query.statement, query.statementParams, {}, false, logQuery);
   return res;
 };
 

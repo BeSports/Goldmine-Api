@@ -5,10 +5,10 @@ const _ = require('lodash');
 
 const findOne = async (db, queryObject, logQuery) => {
   const query = deleteBuilder(queryObject);
-  if (logQuery) {
+  if (logQuery === true) {
     console.log(query);
   }
-  const res = await resolver(db, query.statement, query.statementParams, queryObject, false);
+  const res = await resolver(db, query.statement, query.statementParams, queryObject, false, logQuery);
   return _.first(res);
 };
 

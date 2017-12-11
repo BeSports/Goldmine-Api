@@ -4,10 +4,10 @@ const resolver = require('../resolvers/OrientDbQueryResolver');
 
 const find = async (db, queryObject, logQuery) => {
   const query = selectBuilder(queryObject);
-  if (logQuery) {
+  if (logQuery === true) {
     console.log(query);
   }
-  const res = await resolver(db, query.statement, query.statementParams, queryObject, true);
+  const res = await resolver(db, query.statement, query.statementParams, queryObject, true, logQuery);
   return res;
 };
 

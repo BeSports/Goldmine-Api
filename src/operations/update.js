@@ -5,10 +5,10 @@ const _ = require('lodash');
 
 const update = async (db, queryObject, mergeObject, logQuery) => {
   const query = updateBuilder(queryObject, mergeObject);
-  if (logQuery) {
+  if (logQuery === true) {
     console.log(query);
   }
-  const res = await resolver(db, query.statement, query.statementParams, queryObject, false);
+  const res = await resolver(db, query.statement, query.statementParams, queryObject, false, logQuery);
   return res;
 };
 
