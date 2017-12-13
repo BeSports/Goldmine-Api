@@ -371,17 +371,30 @@ const buildPropertyObject = (propertyName, propertyObject, edge) => {
       propertyObject.value,
       propertyObject.operator,
       edge,
+      propertyObject.method,
     );
   } else if (propertyObject.value !== undefined) {
-    return buildPropertyValuePair(propertyName, propertyObject.value, '=', edge);
+    return buildPropertyValuePair(
+      propertyName,
+      propertyObject.value,
+      '=',
+      edge,
+      propertyObject.method,
+    );
   } else if (propertyObject.operator !== undefined) {
-    return buildPropertyValuePair(propertyName, null, propertyObject.operator, edge);
+    return buildPropertyValuePair(
+      propertyName,
+      null,
+      propertyObject.operator,
+      edge,
+      propertyObject.method,
+    );
   }
   return '';
 };
 
 // preset goldmine since number are not recognized as params by orientjs
-const buildPropertyValuePair = (property, value, operator, edge) => {
+const buildPropertyValuePair = (property, value, operator, edge, method) => {
   const tempParamIndex = setNextParamAvailable(value);
   if (value === null) {
     if (edge) {
@@ -390,12 +403,14 @@ const buildPropertyValuePair = (property, value, operator, edge) => {
     return ` \`${property}\` ${operator}`;
   }
   if (edge) {
-    return ` ${edge}["${property}"] ${operator || '='} :goldmine${tempParamIndex}`;
+    return ` ${edge}["${property}"]${method ? `.${method}` : ''} ${operator ||
+      '='} :goldmine${tempParamIndex}`;
   }
   if (_.indexOf(property, '(') !== -1) {
     return ` ${property} ${operator || '='} :goldmine${tempParamIndex}`;
   }
-  return ` \`${property}\` ${operator || '='} :goldmine${tempParamIndex}`;
+  return ` \`${property}\`${method ? `.${method}` : ''} ${operator ||
+    '='} :goldmine${tempParamIndex}`;
 };
 
 const buildOrderByStmt = template => {
