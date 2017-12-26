@@ -1,6 +1,6 @@
 {
   "name": "goldmine-api",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "description": "Goldmine query language to optimize querying Orient databases Edit",
   "main": "./build/orient.js",
   "scripts": {
@@ -12,10 +12,7 @@
   "bugs": {
     "url": "https://github.com/BeSports/Goldmine-Api/issues"
   },
-  "keywords": [
-    "goldmine",
-    "OrientDB"
-  ],
+  "keywords": ["goldmine", "OrientDB"],
   "author": "Michiel Cuvelier <michiel@kayzr.com>",
   "license": "LGPL-3.0",
   "dependencies": {

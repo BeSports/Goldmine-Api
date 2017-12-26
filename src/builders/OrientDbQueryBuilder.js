@@ -48,10 +48,11 @@ const selectBuilder = (template, noClear) => {
     // EXTENDS
     if (template.extend) {
       const extendFields = buildExtends(template.extend, '');
-      selectStmt += `${_.size(_.trim(selectStmt)) !== 0 &&
-      _.size(_.trim(extendFields.selectStmt)) !== 0
-        ? ', '
-        : ' '} ${extendFields.selectStmt}`;
+      selectStmt += `${
+        _.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0
+          ? ', '
+          : ' '
+      } ${extendFields.selectStmt}`;
       if (_.size(whereStmt) !== 0) {
         if (_.size(extendFields.whereStmt) !== 0) {
           whereStmt += ` AND ${extendFields.whereStmt}`;
@@ -62,11 +63,9 @@ const selectBuilder = (template, noClear) => {
     }
 
     // Add statement
-    statement = `SELECT ${selectStmt} FROM \`${fromStmt}\` ${whereStmt
-      ? 'WHERE ' + whereStmt
-      : ''} ${orderByStmt ? 'ORDER BY ' + orderByStmt : ''} ${paginationStmt
-      ? paginationStmt
-      : ''}`;
+    statement = `SELECT ${selectStmt} FROM \`${fromStmt}\` ${
+      whereStmt ? 'WHERE ' + whereStmt : ''
+    } ${orderByStmt ? 'ORDER BY ' + orderByStmt : ''} ${paginationStmt ? paginationStmt : ''}`;
   }
 
   return {
@@ -106,9 +105,9 @@ const updateBuilder = (template, mergeObject) => {
     }
 
     // Add statement
-    statement = `UPDATE \`${fromStmt}\` ${buildContent(mergeObject)} ${whereStmt
-      ? 'WHERE ' + whereStmt
-      : ''} `;
+    statement = `UPDATE \`${fromStmt}\` ${buildContent(mergeObject)} ${
+      whereStmt ? 'WHERE ' + whereStmt : ''
+    } `;
   }
 
   return {
@@ -178,19 +177,19 @@ const edgesBuilder = (edgesObject, extraCollection) => {
         eo,
         'to.collection',
         extraCollection,
-      )}`} from ${eo.from
-      ? `(select from \`${eo.from.collection}\` WHERE ${buildWhereStmt(eo.from)} ${buildOrderByStmt(
-          eo.from,
-        )
-          ? 'ORDER BY ' + buildOrderByStmt(eo.from)
-          : ''} ${buildPaginationStmt(eo.from)})`
-      : '$vert'} TO ${eo.to
-      ? `(select from \`${eo.to.collection}\` WHERE ${buildWhereStmt(eo.to)} ${buildOrderByStmt(
-          eo.to,
-        )
-          ? 'ORDER BY ' + buildOrderByStmt(eo.to)
-          : ''} ${buildPaginationStmt(eo.to)})`
-      : '$vert'}${eo.content ? ` CONTENT ${JSON.stringify(eo.content)}` : ''};\n`;
+      )}`} from ${
+      eo.from
+        ? `(select from \`${eo.from.collection}\` WHERE ${buildWhereStmt(eo.from)} ${
+            buildOrderByStmt(eo.from) ? 'ORDER BY ' + buildOrderByStmt(eo.from) : ''
+          } ${buildPaginationStmt(eo.from)})`
+        : '$vert'
+    } TO ${
+      eo.to
+        ? `(select from \`${eo.to.collection}\` WHERE ${buildWhereStmt(eo.to)} ${
+            buildOrderByStmt(eo.to) ? 'ORDER BY ' + buildOrderByStmt(eo.to) : ''
+          } ${buildPaginationStmt(eo.to)})`
+        : '$vert'
+    }${eo.content ? ` CONTENT ${JSON.stringify(eo.content)}` : ''};\n`;
     query += edgeQuery;
   });
   _.map(tempParams, (value, property) => {
@@ -213,11 +212,9 @@ const pureEdgesBuilder = edgeObject => {
 
 const fastQuerryBuilder = template => {
   let query = `select expand(bothV()[@class='${template.collection}']) from (`;
-  query += `select expand(bothE(\'${template.extend[0].relation}\')) from ${template.extend[0]
-    .collection} where ${buildWhereStmt(
-    _.pick(template.extend[0], ['collection', 'params']),
-    '',
-  )})`;
+  query += `select expand(bothE(\'${template.extend[0].relation}\')) from ${
+    template.extend[0].collection
+  } where ${buildWhereStmt(_.pick(template.extend[0], ['collection', 'params']), '')})`;
   query + ')';
   return query;
 };
@@ -228,19 +225,20 @@ const buildExtends = (extend, parent) => {
   let whereStmt = '';
   _.map(extend, e => {
     const buildSelect = buildSelectStmt(e, parent);
-    selectStmt += `${_.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(buildSelect)) !== 0
-      ? ', '
-      : ''}${buildSelect}`;
+    selectStmt += `${
+      _.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(buildSelect)) !== 0 ? ', ' : ''
+    }${buildSelect}`;
     const tempWhereStmt = buildWhereStmt(e, parent);
     if (e.extend) {
       const extendFields = buildExtends(
         e.extend,
         (parent ? parent + '.' : '') + buildEdge(e.relation, e.direction),
       );
-      selectStmt += `${_.size(_.trim(selectStmt)) !== 0 &&
-      _.size(_.trim(extendFields.selectStmt)) !== 0
-        ? ', '
-        : ''}${extendFields.selectStmt}`;
+      selectStmt += `${
+        _.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0
+          ? ', '
+          : ''
+      }${extendFields.selectStmt}`;
       if (_.size(whereStmt) !== 0) {
         if (_.size(extendFields.whereStmt) !== 0) {
           whereStmt += ` AND ${extendFields.whereStmt}`;
@@ -275,7 +273,7 @@ const buildSelectStmt = (template, parent) => {
   if (template.target !== undefined) {
     const edge = (parent ? parent + '.' : '') + buildEdge(template.relation, template.direction);
     if (template.fields !== null) {
-      res += `${edge}["_id"] AS \`${_.replace(template.target, '.', '§')}§_id\``;
+      res += `${edge}._id AS \`${_.replace(template.target, '.', '§')}§_id\``;
 
       _.forEach(template.fields, field => {
         if (field === '_id') {
@@ -292,13 +290,9 @@ const buildSelectStmt = (template, parent) => {
     }
     if (template.edgeFields) {
       _.forEach(template.edgeFields, field => {
-        res += `${template.fields === null ? '' : ', '} ${parent
-          ? parent + '.'
-          : ''}bothE(\'${template.relation}\').${field} AS \`${_.replace(
-          template.target,
-          '.',
-          '§',
-        )}§${field}\``;
+        res += `${template.fields === null ? '' : ', '} ${parent ? parent + '.' : ''}bothE("${
+          template.relation
+        }").${field} AS \`${_.replace(template.target, '.', '§')}§${field}\``;
       });
     }
     // main class subscribed on
@@ -478,19 +472,21 @@ const buildContent = mergeObject => {
     })
   ) {
     return (
-      `${mergeObject.$increment
-        ? ' INCREMENT' + obejctToCommaEquals(mergeObject.$increment)
-        : ''}` +
+      `${
+        mergeObject.$increment ? ' INCREMENT' + obejctToCommaEquals(mergeObject.$increment) : ''
+      }` +
       `${mergeObject.$set ? ' SET' + obejctToCommaEquals(mergeObject.$set) : ''}` +
       `${mergeObject.$add ? ' ADD' + obejctToCommaEquals(mergeObject.$add) : ''}` +
-      `${mergeObject.$remove
-        ? _.join(
-            _.map(mergeObject.$remove, (value, key) => {
-              return ' REMOVE ' + key + ' ';
-            }),
-            ' ',
-          )
-        : ''}` +
+      `${
+        mergeObject.$remove
+          ? _.join(
+              _.map(mergeObject.$remove, (value, key) => {
+                return ' REMOVE ' + key + ' ';
+              }),
+              ' ',
+            )
+          : ''
+      }` +
       `${mergeObject.$put ? ' PUT' + obejctToCommaEquals(mergeObject.$put) : ''}` +
       `${mergeObject.$return ? ' RETURN ' + mergeObject.$return + ' ' : ''}`
     );
@@ -579,9 +575,9 @@ const deleteEdge = edgeObject => {
   }
 
   // Add statement
-  statement = `DELETE EDGE  ${fromStmt ? 'FROM (' + fromStmt + ') ' : ''} ${toStmt
-    ? 'TO (' + toStmt + ') '
-    : ''}  ${whereStmt ? 'WHERE ' + whereStmt : ''}`;
+  statement = `DELETE EDGE  ${fromStmt ? 'FROM (' + fromStmt + ') ' : ''} ${
+    toStmt ? 'TO (' + toStmt + ') ' : ''
+  }  ${whereStmt ? 'WHERE ' + whereStmt : ''}`;
 
   return {
     statement,
@@ -612,10 +608,9 @@ const edgeFinder = edgeObject => {
   }
   if (_.has(edgeObject, 'from.extend')) {
     const extendFields = buildExtends(edgeObject.from.extend, 'outV()');
-    selectStmt += `${_.size(_.trim(selectStmt)) !== 0 &&
-    _.size(_.trim(extendFields.selectStmt)) !== 0
-      ? ', '
-      : ' '} ${extendFields.selectStmt}`;
+    selectStmt += `${
+      _.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0 ? ', ' : ' '
+    } ${extendFields.selectStmt}`;
     if (_.size(whereStmt) !== 0) {
       if (_.size(extendFields.whereStmt) !== 0) {
         whereStmt += ` AND ${extendFields.whereStmt}`;
@@ -633,10 +628,9 @@ const edgeFinder = edgeObject => {
 
   if (_.has(edgeObject, 'to.extend')) {
     const extendFields = buildExtends(edgeObject.to.extend, 'inV()');
-    selectStmt += `${_.size(_.trim(selectStmt)) !== 0 &&
-    _.size(_.trim(extendFields.selectStmt)) !== 0
-      ? ', '
-      : ' '} ${extendFields.selectStmt}`;
+    selectStmt += `${
+      _.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0 ? ', ' : ' '
+    } ${extendFields.selectStmt}`;
     if (_.size(whereStmt) !== 0) {
       if (_.size(extendFields.whereStmt) !== 0) {
         whereStmt += ` AND ${extendFields.whereStmt}`;
@@ -647,9 +641,9 @@ const edgeFinder = edgeObject => {
   }
 
   // Add statement
-  statement = `SELECT ${selectStmt} FROM \`${fromStmt}\` ${whereStmt
-    ? 'WHERE ' + whereStmt
-    : ''} ${edgeObject.limit ? 'LIMIT ' + edgeObject.limit : ''}`;
+  statement = `SELECT ${selectStmt} FROM \`${fromStmt}\` ${whereStmt ? 'WHERE ' + whereStmt : ''} ${
+    edgeObject.limit ? 'LIMIT ' + edgeObject.limit : ''
+  }`;
 
   return {
     statement,
