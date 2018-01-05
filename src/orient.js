@@ -21,9 +21,13 @@ const connect = (dbConfig, cb) => {
     password: dbConfig.password,
     servers: dbConfig.servers,
     host: dbConfig.host || _.first(dbConfig.servers).host,
+    pool: {
+      max: 4,
+    },
   });
+  global.server = server;
 
-  server.transport.connection.on('event', error => {
+  server.transport.pool.on('event', error => {
     if (global.logging) {
       console.log('GOLDMINE API: socket event %s', error.code);
     }
