@@ -10,6 +10,7 @@ const deleteOne = require('./operations/deleteOne');
 const deleteEdge = require('./operations/deleteEdge');
 const del = require('./operations/del');
 const insertOne = require('./operations/insertOne');
+const insertMany = require('./operations/insertMany');
 const insertEdges = require('./operations/insertEdge');
 const updateEdge = require('./operations/updateEdge');
 const execute = require('./operations/execute');
@@ -49,6 +50,7 @@ const connect = (dbConfig, cb) => {
   db.delete = del.bind(null, db);
   db.deleteEdge = deleteEdge.bind(null, db);
   db.insertOne = insertOne.bind(null, db);
+  db.insertMany = insertMany.bind(null, db);
   db.insertEdges = insertEdges.bind(null, db);
   db.execute = execute.bind(null, db);
 

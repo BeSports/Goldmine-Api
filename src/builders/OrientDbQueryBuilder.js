@@ -1,5 +1,6 @@
 const _ = require('lodash');
 let tempParams = [];
+const ObjectID = require('bson').ObjectID;
 
 const selectBuilder = (template, noClear) => {
   if (!noClear) {
@@ -33,6 +34,23 @@ const selectBuilder = (template, noClear) => {
     // TOP LEVEL
     // select statement
     selectStmt = buildSelectStmt(template);
+
+    if (template.extend) {
+      const extendFields = buildExtends(template.extend, '');
+      selectStmt += `${
+        _.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0
+          ? ', '
+          : ' '
+      } ${extendFields.selectStmt}`;
+      if (_.size(whereStmt) !== 0) {
+        if (_.size(extendFields.whereStmt) !== 0) {
+          whereStmt += ` AND ${extendFields.whereStmt}`;
+        }
+      } else {
+        whereStmt = extendFields.whereStmt;
+      }
+    }
+
     // from statement
     fromStmt = template.collection;
 
@@ -120,6 +138,7 @@ const updateBuilder = (template, mergeObject) => {
 };
 
 const deleteBuilder = template => {
+  tempParams = [];
   let statement;
   if (typeof template === 'string') {
     return template;
@@ -159,36 +178,100 @@ const deleteBuilder = template => {
 };
 
 const insertBuilder = insertObject => {
-  tempParams = [];
   let query = 'begin\n';
-  query += `let $vert = CREATE VERTEX \`${insertObject.collection}\` CONTENT ${JSON.stringify(
-    insertObject.value,
-  )};\n`;
-  query += edgesBuilder(insertObject.edges, insertObject.collection);
-  query += 'commit \nreturn $vert\n';
+  query += insertObjectBuilder(insertObject);
+  query += 'commit \nreturn $vert0\n';
   return query;
 };
 
-const edgesBuilder = (edgesObject, extraCollection) => {
+const insertObjectBuilder = (insertObject, offset = 0) => {
+  tempParams = [];
+  return `let $vert${offset} = CREATE VERTEX \`${
+    insertObject.collection
+  }\` CONTENT ${JSON.stringify(insertObject.value)}
+  ${edgesBuilder(insertObject.edges, insertObject.collection, offset)}`;
+};
+
+const insertManyBuilder = insertObjects => {
+  let query = 'begin\n';
+  query += _.join(
+    _.map(insertObjects, (insertObject, offset) => {
+      if (!_.has(insertObject, 'value._id')) {
+        const id = new ObjectID().toHexString();
+        _.set(insertObject, 'value._id', id);
+      }
+      return insertObjectBuilder(insertObject, offset * 100);
+    }),
+    '; \n',
+  );
+  query += 'commit \nreturn true\n';
+  return query;
+};
+
+const edgesBuilder = (edgesObject, extraCollection, offset = 0) => {
   let query = '';
   _.map(edgesObject, (eo, i) => {
-    let edgeQuery = `let $${i} = CREATE edge ${eo.edge ||
+    // EXTENDS
+    let fromWhere;
+    let fromFast;
+    if (eo.from) {
+      if (eo.from.fast) {
+        fromFast = fastQuerryBuilder(eo.from);
+      } else {
+        fromWhere = buildWhereStmt(eo.from);
+        if (eo.from.extend) {
+          const extendFromBuild = buildExtends(eo.from.extend, '');
+          if (_.size(fromWhere) !== 0) {
+            if (_.size(extendFromBuild.whereStmt) !== 0) {
+              fromWhere += ` AND ${extendFromBuild.whereStmt}`;
+            }
+          } else {
+            fromWhere = extendFromBuild.whereStmt;
+          }
+        }
+      }
+    }
+
+    let toWhere;
+    let toFast;
+    if (eo.to) {
+      if (eo.to.fast) {
+        toFast = fastQuerryBuilder(eo.to);
+      }
+      toWhere = buildWhereStmt(eo.to);
+      if (eo.to.extend) {
+        const extendToBuild = buildExtends(eo.to.extend, '');
+        if (_.size(toWhere) !== 0) {
+          if (_.size(extendToBuild.whereStmt) !== 0) {
+            toWhere += ` AND ${extendToBuild.whereStmt}`;
+          }
+        } else {
+          toWhere = extendToBuild.whereStmt;
+        }
+      }
+    }
+
+    let edgeQuery = `let $${i + offset} = CREATE edge ${eo.edge ||
       `${_.get(eo, 'from.collection', extraCollection)}_${_.get(
         eo,
         'to.collection',
         extraCollection,
       )}`} from ${
-      eo.from
-        ? `(select from \`${eo.from.collection}\` WHERE ${buildWhereStmt(eo.from)} ${
-            buildOrderByStmt(eo.from) ? 'ORDER BY ' + buildOrderByStmt(eo.from) : ''
-          } ${buildPaginationStmt(eo.from)})`
-        : '$vert'
+      fromFast
+        ? `(${fromFast})`
+        : eo.from
+          ? `(select from \`${eo.from.collection}\` WHERE ${fromWhere} ${
+              buildOrderByStmt(eo.from) ? 'ORDER BY ' + buildOrderByStmt(eo.from) : ''
+            } ${buildPaginationStmt(eo.from)})`
+          : `$vert${offset}`
     } TO ${
-      eo.to
-        ? `(select from \`${eo.to.collection}\` WHERE ${buildWhereStmt(eo.to)} ${
-            buildOrderByStmt(eo.to) ? 'ORDER BY ' + buildOrderByStmt(eo.to) : ''
-          } ${buildPaginationStmt(eo.to)})`
-        : '$vert'
+      toFast
+        ? `(${toFast})`
+        : eo.to
+          ? `(select from \`${eo.to.collection}\` WHERE ${toWhere} ${
+              buildOrderByStmt(eo.to) ? 'ORDER BY ' + buildOrderByStmt(eo.to) : ''
+            } ${buildPaginationStmt(eo.to)})`
+          : `$vert${offset}`
     }${eo.content ? ` CONTENT ${JSON.stringify(eo.content)}` : ''};\n`;
     query += edgeQuery;
   });
@@ -206,15 +289,22 @@ const pureEdgesBuilder = edgeObject => {
   tempParams = [];
   let query = 'begin\n';
   query += edgesBuilder(edgeObject);
-  query += 'commit \nreturn $vert\n';
+  query += 'commit \nreturn $0\n';
   return query;
 };
 
 const fastQuerryBuilder = template => {
-  let query = `select expand(bothV()[@class='${template.collection}']) from (`;
-  query += `select expand(bothE(\'${template.extend[0].relation}\')) from ${
+  let selectStmt = buildSelectStmt(template);
+  if (template.extend) {
+    const extendFields = buildExtends(template.extend, '');
+    selectStmt += `${
+      _.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0 ? ', ' : ' '
+    } ${extendFields.selectStmt}`;
+  }
+  let query = `select ${selectStmt} from (`;
+  query += `select expand(both(\'${template.extend[0].relation}\')) from \`${
     template.extend[0].collection
-  } where ${buildWhereStmt(_.pick(template.extend[0], ['collection', 'params']), '')})`;
+  }\` where ${buildWhereStmt(_.pick(template.extend[0], ['collection', 'params']), '')})`;
   query + ')';
   return query;
 };
@@ -659,6 +749,7 @@ module.exports = {
   updateBuilder,
   deleteBuilder,
   insertBuilder,
+  insertManyBuilder,
   pureEdgesBuilder,
   updateEdgeBuilder,
   edgeFinder,
