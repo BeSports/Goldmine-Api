@@ -4,17 +4,17 @@ const resolver = require('../resolvers/OrientDbQueryResolver');
 const _ = require('lodash');
 
 const findOne = async (db, queryObject, logQuery) => {
-  const query = selectBuilder(queryObject);
+  const query = selectBuilder(_.merge(queryObject, { limit: 1 }));
   if (logQuery === true) {
     console.log(query);
   }
   const res = await resolver(
     db,
-    query.statement + ' LIMIT 1',
+    query.statement,
     query.statementParams,
     queryObject,
     true,
-    logQuery
+    logQuery,
   );
   return _.first(res);
 };

@@ -14,11 +14,8 @@ const selectBuilder = (template, noClear) => {
     };
   } else if (template.fast) {
     return {
-      statement: fastQuerryBuilder(template),
-      statementParams: tempParams.reduce((acc, cur, i) => {
-        acc['goldmine' + i] = cur;
-        return acc;
-      }, {}),
+      statement: newFastBuilder(template),
+      statementParams: { class: 's' },
     };
   } else {
     if (!template.collection && global.logging) {
@@ -293,6 +290,131 @@ const pureEdgesBuilder = edgeObject => {
   return query;
 };
 
+const newFastBuilder = template => {
+  let result = '';
+
+  tempParams = [];
+  if (typeof template === 'string') {
+    result = template;
+  } else if (template.query) {
+    let query = template.query;
+    result = query;
+  } else {
+    if (!template.collection) {
+      console.log(`No collection name was provided to ${template}`);
+    }
+    let orderByStmt = null;
+    let paginationStmt = null;
+
+    // TOP LEVEL
+    // select statement
+    let selectStmt = buildSelectStmt(template);
+
+    // where statement
+    const whereStmts = createWherePaths(template);
+
+    // order by statement
+    orderByStmt = buildOrderByStmt(template);
+
+    // pagination statement
+    paginationStmt = buildPaginationStmt(template);
+
+    // EXTENDS
+    if (template.extend) {
+      const extendFields = buildExtends(template.extend, '');
+      selectStmt += `${
+        _.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0
+          ? ', '
+          : ' '
+      } ${extendFields.selectStmt}`;
+    }
+
+    // Add statement
+    result = `
+          begin
+          ${/* insert the where clauses built before */ ''}
+          ${_.join(
+            _.map(whereStmts, (whereStmt, i) => {
+              return `let $${i + 1} = ${whereStmt} ${
+                orderByStmt ? 'ORDER BY ' + orderByStmt : ''
+              } ${paginationStmt ? paginationStmt : ''}`;
+            }),
+            ' ;',
+          )}
+          ${/* get all rids where the where clauses are correct */ ''}
+          ${
+            _.size(whereStmts) === 1
+              ? ''
+              : `let $inter = select intersect(${_.join(
+                  _.times(_.size(whereStmts), i => {
+                    return `$${i + 1}`;
+                  }),
+                  ', ',
+                )})`
+          }
+          ${/* Select the requested fields */ ''}
+          let $result = select ${selectStmt} from ${
+      _.size(whereStmts) > 1 ? '$inter.intersect' : '$1'
+    } ${orderByStmt ? 'ORDER BY ' + orderByStmt : ''} ${paginationStmt ? paginationStmt : ''};
+          return $result
+          `;
+    _.map(tempParams, function(value, property) {
+      result = _.replace(
+        result,
+        ':goldmine' + property,
+        typeof value === 'string' ? "'" + value + "'" : JSON.stringify(value),
+      );
+    });
+  }
+  return result;
+};
+
+const createWherePaths = template => {
+  let paths = [];
+  let ownParams = '';
+  let optionalPaths = [];
+  let relationString = '';
+  if (template.extend && _.isArray(template.extend) && _.size(template.extend) > 0) {
+    optionalPaths = _.flatten(
+      _.filter(
+        _.map(template.extend, ext => {
+          return createWherePaths(ext);
+        }),
+        r => {
+          return r !== null;
+        },
+      ),
+    );
+  }
+  // string of the current extend its where clauses
+  if (template.params) {
+    ownParams = buildObject(template.params, '');
+  }
+  if (template.relation) {
+    relationString = `expand(${
+      template.direction ? buildWhereDirection(template.direction) : 'both'
+    }('${template.relation}')) `;
+  }
+  if (_.size(optionalPaths) > 0) {
+    return _.map(optionalPaths, path => {
+      return `select ${relationString !== '' ? relationString : ''} from ( ${path} ) ${
+        ownParams !== '' ? 'WHERE' + ownParams : ''
+      }`;
+    });
+  } else if (ownParams !== '' || !template.relation) {
+    return [
+      `select ${relationString !== '' ? relationString : ''}  from \`${template.collection}\` ${
+        ownParams !== '' ? 'WHERE' + ownParams : ''
+      }`,
+    ];
+  }
+  return null;
+};
+
+const buildWhereDirection = direction => {
+  return direction ? (_.toLower(direction) === 'in' ? 'in' : 'out') : 'both';
+};
+
 const fastQuerryBuilder = template => {
   let selectStmt = buildSelectStmt(template);
   if (template.extend) {
@@ -409,11 +531,11 @@ const buildWhereStmt = (template, parent) => {
     edge = (parent ? parent + '.' : '') + '' + buildEdge(template.relation, template.direction);
   }
   let res = '';
-  if (template.params instanceof Array) {
+  if (_.isArray(template.params)) {
     _.forEach(template.params, (param, key) => {
       res += buildObject(param, edge) + (_.size(template.params) - 1 > key ? ' OR' : '');
     });
-  } else if (template.params instanceof Object) {
+  } else if (_.isObject(template.params)) {
     res = buildObject(template.params, edge);
   } else if (typeof template.params === 'string') {
     res += buildPropertyValuePair('_id', template.params, '=', edge);
@@ -424,6 +546,9 @@ const buildWhereStmt = (template, parent) => {
 const buildObject = (paramsObject, edge) => {
   let objectRes = '(';
   let counter = 0;
+  if (_.isString(paramsObject)) {
+    return buildPropertyValuePair('_id', paramsObject, '=', edge);
+  }
   _.forEach(paramsObject, (value, property) => {
     objectRes +=
       buildProperty(value, property, edge) + (_.size(paramsObject) - 1 > counter ? ' AND' : ' )');
@@ -433,14 +558,14 @@ const buildObject = (paramsObject, edge) => {
 };
 
 const buildProperty = (value, property, edge) => {
-  if (value instanceof Array) {
+  if (_.isArray(value)) {
     let res = '(';
     _.forEach(value, (v, i) => {
       res += buildPropertyObject(property, v, edge) + (_.size(value) - 1 > i ? ' OR' : ' )');
     });
     return res;
   }
-  if (value instanceof Object) {
+  if (_.isObject(value)) {
     return buildPropertyObject(property, value, edge);
   }
   return buildPropertyValuePair(property, value, '=', edge);
@@ -649,7 +774,8 @@ const deleteEdge = edgeObject => {
   let whereStmt = ` @class = \'${collectionStmt}\' `;
   let fromStmt = '';
   let toStmt = '';
-
+  // pagination statement
+  const paginationStmt = buildPaginationStmt(edgeObject);
   // TOP LEVEL
   // from statement
 
@@ -667,7 +793,7 @@ const deleteEdge = edgeObject => {
   // Add statement
   statement = `DELETE EDGE  ${fromStmt ? 'FROM (' + fromStmt + ') ' : ''} ${
     toStmt ? 'TO (' + toStmt + ') ' : ''
-  }  ${whereStmt ? 'WHERE ' + whereStmt : ''}`;
+  }  ${whereStmt ? 'WHERE ' + whereStmt : ''} ${paginationStmt || ''}`;
 
   return {
     statement,
