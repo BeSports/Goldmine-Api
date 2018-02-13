@@ -17,6 +17,7 @@ from another database language such as MongoDB without having to dig through all
   * [insertOne(insertObject)](#insertoneinsertobject)
   * [insertEdge(s)(edgesObject)](#insertedgesedgesobject)
 
+Any questions concerning this package can be adressed to me directly by [mail](mailto:michiel@kayzr.com) or by opening an issue
 
 # Usage
 In our example we use this in an express based api.
