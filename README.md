@@ -23,10 +23,15 @@ In our example we use this in an express based api.
 
 ```
 const dbOptions = {
-  username: orientConfig.username, // database username
-  password: orientConfig.password, // database password
-  servers: orientConfig.host, // servers are defined in an array following the official documentation: http://orientdb.com/docs/last/OrientJS-Server.html#using-distributed-databases
-  databaseName: orientConfig.name, // name of your database on orient
+  username: 'goldmineapi', // database username
+  password: 'goldmineapiSecretP4ssword', // database password
+  servers: [
+      {
+        "host": "orientdev.kayzr.com",
+        "port": 2424
+      }
+    ], // servers are defined in an array following the official documentation: http://orientdb.com/docs/last/OrientJS-Server.html#using-distributed-databases
+  name: 'mydatabase', // name of your database on orient
   logging: true, //enables logging of long queries and errors
 };
 
@@ -68,6 +73,7 @@ const result = await global.db.findOne({
 >   '@version': 0 }
 
 ## find(queryObject)
+Sidenote: an additional parameter fast: true can be added to these queries to decrease their execution time drastically, mostly usefull on queries with really long extend paths which contain params.
 ```
 const result = await global.db.find({
   collection: 'user',
@@ -96,6 +102,7 @@ const result = await global.db.find({
 >     '@version': 0 } ]
 
 ## findEdge(edgeObject)
+Sidenote: it often executes way faster if you request the objects the edge starts from/ ends at to fetch the edgeFields from those.
 ```
 const res = await global.db.findEdge({
   edge: 'user_comment',
@@ -216,6 +223,7 @@ const res = await global.db.deleteEdge({
  > ['3'] (entries changed)
 
 ## insertOne(insertObject)
+Sidenote: '_id' is always added automatically to the inserted objects, you can pass it yourself(but it is recommended you don't).
 ```
 const result = await global.db.insertOne(
   {
@@ -255,7 +263,7 @@ const result = await global.db.insertOne(
 >   '@version': 1 }
 
 
-## insertEdge(s)(edgesObject)
+## insertEdges(edgesObject)
 ```
 const result = await global.db.insertEdges(
   [{
@@ -267,7 +275,9 @@ const result = await global.db.insertEdges(
     },
     to :{
       collection: 'tournament',
-      params: 'YmTDKaxET8Rj6rSk9'
+      params: {
+        _id: 'YmTDKaxET8Rj6rSk9',
+      }
     },
     edge: 'user_tournament_participating',
     content: {
