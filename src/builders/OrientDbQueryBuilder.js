@@ -335,16 +335,14 @@ const newFastBuilder = template => {
           ${/* insert the where clauses built before */ ''}
           ${_.join(
             _.map(whereStmts, (whereStmt, i) => {
-              return `let $${i + 1} = ${whereStmt} ${
-                orderByStmt ? 'ORDER BY ' + orderByStmt : ''
-              } ${paginationStmt ? paginationStmt : ''}`;
+              return `let $${i + 1} = ${whereStmt}`;
             }),
             ' ;',
           )}
           ${/* get all rids where the where clauses are correct */ ''}
           ${
             _.size(whereStmts) === 1
-              ? ''
+              ? 'let $inter = select intersect($1,$1);'
               : `let $inter = select intersect(${_.join(
                   _.times(_.size(whereStmts), i => {
                     return `$${i + 1}`;
@@ -353,9 +351,9 @@ const newFastBuilder = template => {
                 )})`
           }
           ${/* Select the requested fields */ ''}
-          let $result = select ${selectStmt} from ${
-      _.size(whereStmts) > 1 ? '$inter.intersect' : '$1'
-    } ${orderByStmt ? 'ORDER BY ' + orderByStmt : ''} ${paginationStmt ? paginationStmt : ''};
+          let $result = select ${selectStmt} from $inter.intersect  ${
+      orderByStmt ? 'ORDER BY ' + orderByStmt : ''
+    } ${paginationStmt ? paginationStmt : ''};
           return $result
           `;
     _.map(tempParams, function(value, property) {
