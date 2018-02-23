@@ -719,6 +719,7 @@ const obejctToCommaEquals = object => {
 
 const updateEdgeBuilder = (edgeObject, mergeObject) => {
   tempParams = [];
+  let edgeToUpdate = edgeObject.edge;
   let whereStmt = '' + buildWhereStmt(edgeObject, '');
   if (edgeObject.from) {
     if (whereStmt !== '') {
@@ -732,10 +733,14 @@ const updateEdgeBuilder = (edgeObject, mergeObject) => {
     }
     whereStmt += edgeWhereBuilder(edgeObject.to, 'in');
   }
+  if (whereStmt === '' && edgeObject.rid) {
+    edgeToUpdate = edgeObject.rid;
+    console.log({ edgeToUpdate });
+  }
 
-  const statement = `UPDATE edge ${edgeObject.edge} ${buildContent(
-    mergeObject,
-  )} WHERE ${whereStmt}`;
+  const statement = `UPDATE edge ${
+    _.isArray(edgeToUpdate) ? `[ ${edgeToUpdate} ]` : `${edgeToUpdate}`
+  } ${buildContent(mergeObject)} ${whereStmt ? `WHERE ${whereStmt}` : ''}`;
 
   return {
     statement,
