@@ -359,7 +359,7 @@ const newFastBuilder = template => {
     _.map(tempParams, function(value, property) {
       result = _.replace(
         result,
-        ':goldmine' + property,
+        new RegExp(':goldmine' + property, 'g'),
         typeof value === 'string' ? "'" + value + "'" : JSON.stringify(value),
       );
     });
