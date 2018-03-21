@@ -735,7 +735,6 @@ const updateEdgeBuilder = (edgeObject, mergeObject) => {
   }
   if (whereStmt === '' && edgeObject.rid) {
     edgeToUpdate = edgeObject.rid;
-    console.log({ edgeToUpdate });
   }
 
   const statement = `UPDATE edge ${
