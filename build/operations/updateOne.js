@@ -31,7 +31,7 @@ var findOne = function () {
               console.log(query);
             }
             _context.next = 4;
-            return resolver(db, query.statement + ' LIMIT 1', query.statementParams, queryObject, false, logQuery);
+            return resolver(db, query.statement + ' LIMIT 1;', query.statementParams, queryObject, false, logQuery);
 
           case 4:
             res = _context.sent;

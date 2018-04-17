@@ -10,7 +10,7 @@ const findOne = async (db, queryObject, mergeObject, logQuery) => {
   }
   const res = await resolver(
     db,
-    query.statement + ' LIMIT 1',
+    query.statement + ' LIMIT 1;',
     query.statementParams,
     queryObject,
     false,

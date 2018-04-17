@@ -8,7 +8,7 @@ const update = async (db, queryObject, mergeObject, logQuery) => {
   if (logQuery === true) {
     console.log(query);
   }
-  const res = await resolver(db, query.statement, query.statementParams, queryObject, false, logQuery);
+  const res = await resolver(db, query.statement + ';', query.statementParams, queryObject, false, logQuery);
   return res;
 };
 

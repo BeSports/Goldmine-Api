@@ -31,7 +31,7 @@ var update = function () {
               console.log(query);
             }
             _context.next = 4;
-            return resolver(db, query.statement, query.statementParams, queryObject, false, logQuery);
+            return resolver(db, query.statement + ';', query.statementParams, queryObject, false, logQuery);
 
           case 4:
             res = _context.sent;

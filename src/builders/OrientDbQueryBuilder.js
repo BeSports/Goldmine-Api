@@ -122,7 +122,7 @@ const updateBuilder = (template, mergeObject) => {
     // Add statement
     statement = `UPDATE \`${fromStmt}\` ${buildContent(mergeObject)} ${
       whereStmt ? 'WHERE ' + whereStmt : ''
-    } ;`;
+    }`;
   }
 
   return {

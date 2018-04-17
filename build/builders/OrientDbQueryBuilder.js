@@ -112,7 +112,7 @@ var updateBuilder = function updateBuilder(template, mergeObject) {
     }
 
     // Add statement
-    statement = 'UPDATE `' + fromStmt + '` ' + buildContent(mergeObject) + ' ' + (whereStmt ? 'WHERE ' + whereStmt : '') + ' ;';
+    statement = 'UPDATE `' + fromStmt + '` ' + buildContent(mergeObject) + ' ' + (whereStmt ? 'WHERE ' + whereStmt : '');
   }
 
   return {
