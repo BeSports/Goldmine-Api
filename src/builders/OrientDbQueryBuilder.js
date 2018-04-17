@@ -122,7 +122,7 @@ const updateBuilder = (template, mergeObject) => {
     // Add statement
     statement = `UPDATE \`${fromStmt}\` ${buildContent(mergeObject)} ${
       whereStmt ? 'WHERE ' + whereStmt : ''
-    } `;
+    } ;`;
   }
 
   return {
@@ -162,7 +162,7 @@ const deleteBuilder = template => {
     }
 
     // Add statement
-    statement = `DELETE VERTEX \`${fromStmt}\` ${whereStmt ? 'WHERE ' + whereStmt : ''} `;
+    statement = `DELETE VERTEX \`${fromStmt}\` ${whereStmt ? 'WHERE ' + whereStmt : ''} ;`;
   }
 
   return {
@@ -175,9 +175,9 @@ const deleteBuilder = template => {
 };
 
 const insertBuilder = insertObject => {
-  let query = 'begin\n';
+  let query = '';
   query += insertObjectBuilder(insertObject);
-  query += 'commit \nreturn $vert0\n';
+  query += '\nreturn $vert0;\n';
   return query;
 };
 
@@ -186,11 +186,11 @@ const insertObjectBuilder = (insertObject, offset = 0) => {
   return `let $vert${offset} = CREATE VERTEX \`${
     insertObject.collection
   }\` CONTENT ${JSON.stringify(insertObject.value)}
-  ${edgesBuilder(insertObject.edges, insertObject.collection, offset)}`;
+  ${edgesBuilder(insertObject.edges, insertObject.collection, offset)} ;`;
 };
 
 const insertManyBuilder = insertObjects => {
-  let query = 'begin\n';
+  let query = '';
   query += _.join(
     _.map(insertObjects, (insertObject, offset) => {
       if (!_.has(insertObject, 'value._id')) {
@@ -201,7 +201,7 @@ const insertManyBuilder = insertObjects => {
     }),
     '; \n',
   );
-  query += 'commit \nreturn true\n';
+  query += '\nreturn true;\n';
   return query;
 };
 
@@ -284,9 +284,9 @@ const edgesBuilder = (edgesObject, extraCollection, offset = 0) => {
 
 const pureEdgesBuilder = edgeObject => {
   tempParams = [];
-  let query = 'begin\n';
+  let query = '';
   query += edgesBuilder(edgeObject);
-  query += 'commit \nreturn $0\n';
+  query += '\nreturn $0;\n';
   return query;
 };
 
@@ -331,7 +331,6 @@ const newFastBuilder = template => {
 
     // Add statement
     result = `
-          begin
           ${/* insert the where clauses built before */ ''}
           ${_.join(
             _.map(whereStmts, (whereStmt, i) => {
@@ -348,13 +347,13 @@ const newFastBuilder = template => {
                     return `$${i + 1}`;
                   }),
                   ', ',
-                )})`
+                )});`
           }
           ${/* Select the requested fields */ ''}
           let $result = select ${selectStmt} from $inter.intersect  ${
       orderByStmt ? 'ORDER BY ' + orderByStmt : ''
     } ${paginationStmt ? paginationStmt : ''};
-          return $result
+          return $result;
           `;
     _.map(tempParams, function(value, property) {
       result = _.replace(
@@ -739,7 +738,7 @@ const updateEdgeBuilder = (edgeObject, mergeObject) => {
 
   const statement = `UPDATE edge ${
     _.isArray(edgeToUpdate) ? `[ ${edgeToUpdate} ]` : `${edgeToUpdate}`
-  } ${buildContent(mergeObject)} ${whereStmt ? `WHERE ${whereStmt}` : ''}`;
+  } ${buildContent(mergeObject)} ${whereStmt ? `WHERE ${whereStmt}` : ''};`;
 
   return {
     statement,
@@ -791,11 +790,16 @@ const deleteEdge = edgeObject => {
   if (edgeObject.params) {
     fromStmt += buildWhereStmt(edgeObject, '');
   }
-
-  // Add statement
-  statement = `DELETE EDGE  ${fromStmt ? 'FROM (' + fromStmt + ') ' : ''} ${
-    toStmt ? 'TO (' + toStmt + ') ' : ''
-  }  ${whereStmt ? 'WHERE ' + whereStmt : ''} ${paginationStmt || ''}`;
+  if (fromStmt === '' && toStmt === '' && edgeObject.rid) {
+    statement = `DELETE EDGE  ${
+      _.isArray(edgeObject.rid) ? `[ ${edgeObject.rid} ]` : `${edgeObject.rid}`
+    }`;
+  } else {
+    // Add statement
+    statement = `DELETE EDGE  ${fromStmt ? 'FROM (' + fromStmt + ') ' : ''} ${
+      toStmt ? 'TO (' + toStmt + ') ' : ''
+    }  ${whereStmt ? 'WHERE ' + whereStmt : ''} ${paginationStmt || ''};`;
+  }
 
   return {
     statement,
@@ -861,7 +865,7 @@ const edgeFinder = edgeObject => {
   // Add statement
   statement = `SELECT ${selectStmt} FROM \`${fromStmt}\` ${whereStmt ? 'WHERE ' + whereStmt : ''} ${
     edgeObject.limit ? 'LIMIT ' + edgeObject.limit : ''
-  }`;
+  };`;
 
   return {
     statement,
