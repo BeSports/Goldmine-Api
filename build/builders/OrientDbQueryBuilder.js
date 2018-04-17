@@ -565,9 +565,9 @@ var buildContent = function buildContent(mergeObject) {
   if (_.find(_.keys(mergeObject), function (k) {
     return _.startsWith(k, '$');
   })) {
-    return '' + (mergeObject.$increment ? ' INCREMENT' + obejctToCommaEquals(mergeObject.$increment) : '') + ('' + (mergeObject.$set ? ' SET' + obejctToCommaEquals(mergeObject.$set) : '')) + ('' + (mergeObject.$add ? ' ADD' + obejctToCommaEquals(mergeObject.$add) : '')) + ('' + (mergeObject.$remove ? _.join(_.map(mergeObject.$remove, function (value, key) {
-      return ' REMOVE ' + key + ' ';
-    }), ' ') : '')) + ('' + (mergeObject.$put ? ' PUT' + obejctToCommaEquals(mergeObject.$put) : '')) + ('' + (mergeObject.$return ? ' RETURN ' + mergeObject.$return + ' ' : ''));
+    return '' + (mergeObject.$increment ? ' INCREMENT' + obejctToCommaEquals(mergeObject.$increment) : '') + ('' + (mergeObject.$set ? ' SET' + obejctToCommaEquals(mergeObject.$set) : '')) + ('' + (mergeObject.$add ? ' ADD' + obejctToCommaEquals(mergeObject.$add) : '')) + ('' + (mergeObject.$remove ? ' REMOVE ' + _.join(_.map(mergeObject.$remove, function (value, key) {
+      return key + '';
+    }), ' , ') : '')) + ('' + (mergeObject.$put ? ' PUT' + obejctToCommaEquals(mergeObject.$put) : '')) + ('' + (mergeObject.$return ? ' RETURN ' + mergeObject.$return + ' ' : ''));
   }
   return mergeObject ? ' MERGE ' + JSON.stringify(mergeObject) : '';
 };

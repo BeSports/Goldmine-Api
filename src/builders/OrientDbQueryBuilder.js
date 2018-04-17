@@ -691,11 +691,12 @@ const buildContent = mergeObject => {
       `${mergeObject.$add ? ' ADD' + obejctToCommaEquals(mergeObject.$add) : ''}` +
       `${
         mergeObject.$remove
-          ? _.join(
+          ? ' REMOVE ' +
+            _.join(
               _.map(mergeObject.$remove, (value, key) => {
-                return ' REMOVE ' + key + ' ';
+                return key + '';
               }),
-              ' ',
+              ' , ',
             )
           : ''
       }` +
