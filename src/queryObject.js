@@ -1,7 +1,7 @@
 const _ = require('lodash');
 
 const validator = queryObject => {
-  if(typeof queryObject === 'string') {
+  if (typeof queryObject === 'string') {
     return false;
   }
   // collection
@@ -47,17 +47,19 @@ const paramsValidator = paramsObject => {
     typeof paramsObject === 'string'
       ? false
       : typeof paramsObject === 'object'
-          ? paramsObjectValidator(paramsObject)
-          : 'unrecognized params type';
+        ? paramsObjectValidator(paramsObject)
+        : 'unrecognized params type';
   return paramsError;
 };
 
 const paramsObjectValidator = paramsObject => {
   let error;
-  if(paramsObject instanceof Array) {
-    return _.flatten(_.map(paramsObject, (po) => {
-      return paramsObjectValidator(po);
-    }))
+  if (paramsObject instanceof Array) {
+    return _.flatten(
+      _.map(paramsObject, po => {
+        return paramsObjectValidator(po);
+      }),
+    );
   }
   _.mapKeys(paramsObject, (value, key) => {
     if (typeof value === 'string' || _.toLower(value.operator) === 'matches') {
@@ -68,12 +70,16 @@ const paramsObjectValidator = paramsObject => {
         return;
       }
       if (_.has(value, 'operator') && typeof value.operator !== 'string') {
-        error += `String is the only allowed format for operator of key \<${JSON.stringify(value)}\>`;
+        error += `String is the only allowed format for operator of key \<${JSON.stringify(
+          value,
+        )}\>`;
         return;
       }
       if (_.has(value, 'value') && _.has(value, 'operator') && value.value instanceof Array) {
         if (_.toLower(value.operator) !== 'in') {
-          error += `Array is not an allowed value for operator \<${operator}\> for \<${JSON.stringify(value)}\>`;
+          error += `Array is not an allowed value for operator \<${operator}\> for \<${JSON.stringify(
+            value,
+          )}\>`;
         } else {
           return;
         }
@@ -147,13 +153,11 @@ const extendValidator = extend => {
     ) {
       return false;
     } else {
-      return `${collectionError ? collectionError : ''}${targetError
-        ? targetError
-        : ''}${relationError ? relationError : ''}${fieldsError ? fieldsError : ''}${paramsError
-        ? paramsError
-        : ''}${orderByError ? orderByError : ''}${limitError ? limitError : ''}${extendError
-        ? extendError
-        : ''}`;
+      return `${collectionError ? collectionError : ''}${targetError ? targetError : ''}${
+        relationError ? relationError : ''
+      }${fieldsError ? fieldsError : ''}${paramsError ? paramsError : ''}${
+        orderByError ? orderByError : ''
+      }${limitError ? limitError : ''}${extendError ? extendError : ''}`;
     }
   });
 };

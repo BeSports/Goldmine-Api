@@ -7,7 +7,14 @@ const find = async (db, queryObject, logQuery) => {
   if (logQuery === true) {
     console.log(query);
   }
-  const res = await resolver(db, query.statement, query.statementParams, queryObject, true, logQuery);
+  const res = await resolver(
+    db,
+    query.statement,
+    query.statementParams,
+    queryObject,
+    true,
+    logQuery,
+  );
   return res;
 };
 

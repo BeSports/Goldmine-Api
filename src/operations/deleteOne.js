@@ -8,7 +8,14 @@ const deleteOne = async (db, queryObject, logQuery) => {
   if (logQuery === true) {
     console.log(query);
   }
-  const res = await resolver(db, query.statement + ' LIMIT 1', query.statementParams, {}, false, logQuery);
+  const res = await resolver(
+    db,
+    query.statement + ' LIMIT 1',
+    query.statementParams,
+    {},
+    false,
+    logQuery,
+  );
   return res;
 };
 
