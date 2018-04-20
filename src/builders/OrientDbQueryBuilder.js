@@ -793,9 +793,15 @@ const deleteEdge = edgeObject => {
   }
 
   // Add statement
-  statement = `DELETE EDGE  ${fromStmt ? 'FROM (' + fromStmt + ') ' : ''} ${
-    toStmt ? 'TO (' + toStmt + ') ' : ''
-  }  ${whereStmt ? 'WHERE ' + whereStmt : ''} ${paginationStmt || ''}`;
+  if (fromStmt === '' && toStmt === '' && edgeObject.rid) {
+    statement = `DELETE EDGE  ${
+      _.isArray(edgeObject.rid) ? `[ ${edgeObject.rid} ]` : `${edgeObject.rid}`
+    }`;
+  } else {
+    statement = `DELETE EDGE  ${fromStmt ? 'FROM (' + fromStmt + ') ' : ''} ${
+      toStmt ? 'TO (' + toStmt + ') ' : ''
+    }  ${whereStmt ? 'WHERE ' + whereStmt : ''} ${paginationStmt || ''};`;
+  }
 
   return {
     statement,
