@@ -126,7 +126,7 @@ var handleResponse = function handleResponse(template, response) {
             formattedObject[target][key][property] = property.startsWith('_id') ? item.toString() : item;
           });
         } else {
-          _.set(formattedObject, target + '.' + _.replace(property, '§', '.'), value instanceof Array && _.size(value) === 1 ? value[0] : value);
+          _.set(formattedObject, target + '.' + _.replace(property, '§', '.'), _.isArray(value) && _.size(value) === 1 ? value[0] : value);
         }
       }
     });

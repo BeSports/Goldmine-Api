@@ -77,7 +77,7 @@ const handleResponse = (template, response) => {
           _.set(
             formattedObject,
             `${target}.${_.replace(property, '§', '.')}`,
-            value instanceof Array && _.size(value) === 1 ? value[0] : value,
+            _.isArray(value) && _.size(value) === 1 ? value[0] : value,
           );
         }
       }
