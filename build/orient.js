@@ -42,6 +42,12 @@ var connect = function connect(dbConfig, cb) {
     password: dbConfig.password
   });
 
+  db.on('endQuery', function (obj) {
+    if (global.logging && obj.perf.query > 500) {
+      console.log('\n        Reason: long query\n        Duration: ' + obj.perf.query + 'ms\n        Query: ' + obj.input.query + '\n        Params: ' + obj.input.params + '\n      ');
+    }
+  });
+
   db.findOne = findOne.bind(null, db);
   db.find = find.bind(null, db);
   db.findEdge = findEdge.bind(null, db);

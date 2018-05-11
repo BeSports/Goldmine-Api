@@ -1,7 +1,6 @@
 const _ = require('lodash');
 const resolve = async (db, query, params, template, shouldSelect, logQuery) => {
   let data;
-  const n = new Date().getTime();
   try {
     if (_.get(params, 'class') === 's') {
       data = await db.query(query, { class: 's' });
@@ -14,13 +13,6 @@ const resolve = async (db, query, params, template, shouldSelect, logQuery) => {
     console.log(err);
   }
 
-  const m = new Date().getTime();
-  if (m - n > 1000 && global.logging && logQuery !== false) {
-    console.log('GOLDMINE API: ');
-    console.log('Querry took: ', m - n, 'ms');
-    console.log('long query:  ', query);
-    console.log('params of:  ', params);
-  }
   if (shouldSelect) {
     return handleResponse(template, data);
   } else {

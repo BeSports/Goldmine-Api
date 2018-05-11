@@ -13,73 +13,63 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var _ = require('lodash');
 var resolve = function () {
   var _ref = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee(db, query, params, template, shouldSelect, logQuery) {
-    var data, n, m;
+    var data;
     return _regenerator2.default.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
             data = void 0;
-            n = new Date().getTime();
-            _context.prev = 2;
+            _context.prev = 1;
 
             if (!(_.get(params, 'class') === 's')) {
-              _context.next = 9;
+              _context.next = 8;
               break;
             }
 
-            _context.next = 6;
+            _context.next = 5;
             return db.query(query, { class: 's' });
 
-          case 6:
+          case 5:
             data = _context.sent;
-            _context.next = 12;
+            _context.next = 11;
             break;
 
-          case 9:
-            _context.next = 11;
+          case 8:
+            _context.next = 10;
             return db.query(query, { params: params });
 
-          case 11:
+          case 10:
             data = _context.sent;
 
-          case 12:
-            _context.next = 19;
+          case 11:
+            _context.next = 18;
             break;
 
-          case 14:
-            _context.prev = 14;
-            _context.t0 = _context['catch'](2);
+          case 13:
+            _context.prev = 13;
+            _context.t0 = _context['catch'](1);
 
             console.warn('A querry failed to execute', query, ' using the params', params);
             console.trace();
             console.log(_context.t0);
 
-          case 19:
-            m = new Date().getTime();
-
-            if (m - n > 1000 && global.logging && logQuery !== false) {
-              console.log('GOLDMINE API: ');
-              console.log('Querry took: ', m - n, 'ms');
-              console.log('long query:  ', query);
-              console.log('params of:  ', params);
-            }
-
+          case 18:
             if (!shouldSelect) {
-              _context.next = 25;
+              _context.next = 22;
               break;
             }
 
             return _context.abrupt('return', handleResponse(template, data));
 
-          case 25:
+          case 22:
             return _context.abrupt('return', data);
 
-          case 26:
+          case 23:
           case 'end':
             return _context.stop();
         }
       }
-    }, _callee, undefined, [[2, 14]]);
+    }, _callee, undefined, [[1, 13]]);
   }));
 
   return function resolve(_x, _x2, _x3, _x4, _x5, _x6) {
