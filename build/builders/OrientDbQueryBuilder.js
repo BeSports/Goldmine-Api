@@ -404,7 +404,7 @@ var buildSelectStmt = function buildSelectStmt(template, parent) {
     }
     if (template.edgeFields) {
       _.forEach(template.edgeFields, function (field) {
-        res += (template.fields === null ? '' : ', ') + ' ' + (parent ? parent + '.' : '') + 'bothE("' + template.relation + '").' + field + ' AS `' + _.replace(template.target, '.', '§') + '\xA7' + field + '`';
+        res += (template.fields === null ? '' : ', ') + ' ' + (parent ? parent + '.' : '') + buildDirection(template.direction) + 'E("' + template.relation + '").' + field + ' AS `' + _.replace(template.target, '.', '§') + '\xA7' + field + '`';
       });
     }
     // main class subscribed on

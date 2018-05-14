@@ -500,9 +500,13 @@ const buildSelectStmt = (template, parent) => {
     }
     if (template.edgeFields) {
       _.forEach(template.edgeFields, field => {
-        res += `${template.fields === null ? '' : ', '} ${parent ? parent + '.' : ''}bothE("${
-          template.relation
-        }").${field} AS \`${_.replace(template.target, '.', '§')}§${field}\``;
+        res += `${template.fields === null ? '' : ', '} ${
+          parent ? parent + '.' : ''
+        }${buildDirection(template.direction)}E("${template.relation}").${field} AS \`${_.replace(
+          template.target,
+          '.',
+          '§',
+        )}§${field}\``;
       });
     }
     // main class subscribed on
