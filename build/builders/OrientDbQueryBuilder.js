@@ -19,7 +19,7 @@ var selectBuilder = function selectBuilder(template, noClear) {
       statement: template.query,
       statementParams: { class: 's' }
     };
-  } else if (template.fast) {
+  } else if (template.fast || template.new) {
     return {
       statement: newFastBuilder(template),
       statementParams: { class: 's' }
@@ -40,18 +40,6 @@ var selectBuilder = function selectBuilder(template, noClear) {
     // select statement
     selectStmt = buildSelectStmt(template);
 
-    if (template.extend) {
-      var extendFields = buildExtends(template.extend, '');
-      selectStmt += (_.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0 ? ', ' : ' ') + ' ' + extendFields.selectStmt;
-      if (_.size(whereStmt) !== 0) {
-        if (_.size(extendFields.whereStmt) !== 0) {
-          whereStmt += ' AND ' + extendFields.whereStmt;
-        }
-      } else {
-        whereStmt = extendFields.whereStmt;
-      }
-    }
-
     // from statement
     fromStmt = template.collection;
 
@@ -66,18 +54,16 @@ var selectBuilder = function selectBuilder(template, noClear) {
 
     // EXTENDS
     if (template.extend) {
-      var _extendFields = buildExtends(template.extend, '');
-      selectStmt += (_.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(_extendFields.selectStmt)) !== 0 ? ', ' : ' ') + ' ' + _extendFields.selectStmt;
+      var extendFields = buildExtends(template.extend, '');
+      selectStmt += (_.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0 ? ', ' : ' ') + ' ' + extendFields.selectStmt;
       if (_.size(whereStmt) !== 0) {
-        if (_.size(_extendFields.whereStmt) !== 0) {
-          whereStmt += ' AND ' + _extendFields.whereStmt;
+        if (_.size(extendFields.whereStmt) !== 0) {
+          whereStmt += ' AND ' + extendFields.whereStmt;
         }
       } else {
-        whereStmt = _extendFields.whereStmt;
+        whereStmt = extendFields.whereStmt;
       }
     }
-
-    console.log(selectStmt);
 
     // Add statement
     statement = 'SELECT ' + selectStmt + ' FROM `' + fromStmt + '` ' + (whereStmt ? 'WHERE ' + whereStmt : '') + ' ' + (orderByStmt ? 'ORDER BY ' + orderByStmt : '') + ' ' + (paginationStmt ? paginationStmt : '');
@@ -268,15 +254,11 @@ var newFastBuilder = function newFastBuilder(template) {
   if (typeof template === 'string') {
     result = template;
   } else if (template.query) {
-    var query = template.query;
-    result = query;
+    result = template.query;
   } else {
     if (!template.collection) {
       console.log('No collection name was provided to ' + template);
     }
-    var orderByStmt = null;
-    var paginationStmt = null;
-
     // TOP LEVEL
     // select statement
     var selectStmt = buildSelectStmt(template);
@@ -285,23 +267,36 @@ var newFastBuilder = function newFastBuilder(template) {
     var whereStmts = createWherePaths(template);
 
     // order by statement
-    orderByStmt = buildOrderByStmt(template);
+    var orderByStmt = buildOrderByStmt(template);
 
     // pagination statement
-    paginationStmt = buildPaginationStmt(template);
+    var paginationStmt = buildPaginationStmt(template);
+
+    // optional for new:true
+    var whereSlowAddition = '';
 
     // EXTENDS
     if (template.extend) {
       var extendFields = buildExtends(template.extend, '');
       selectStmt += (_.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0 ? ', ' : ' ') + ' ' + extendFields.selectStmt;
+      if (template.new && template.fast) {
+        var extendWhereFields = undefined.createSlowWheres(template.extend, '');
+        whereSlowAddition = extendWhereFields;
+      }
     }
 
+    var hasRootParams = _.has(template, 'params');
+
     // Add statement
-    result = '\n          begin\n          ' + '\n          ' + _.join(_.map(whereStmts, function (whereStmt, i) {
-      return 'let $' + (i + 1) + ' = ' + whereStmt;
-    }), ' ;') + '\n          ' + '\n          ' + (_.size(whereStmts) === 1 ? 'let $inter = select intersect($1,$1);' : 'let $inter = select intersect(' + _.join(_.times(_.size(whereStmts), function (i) {
-      return '$' + (i + 1);
-    }), ', ') + ')') + '\n          ' + '\n          let $result = select ' + selectStmt + ' from $inter.intersect  ' + (orderByStmt ? 'ORDER BY ' + orderByStmt : '') + ' ' + (paginationStmt ? paginationStmt : '') + ';\n          return $result\n          ';
+    if (!template.new) {
+      result = '\n          begin\n          ' + '\n          ' + _.join(_.map(whereStmts, function (whereStmt, i) {
+        return 'let $' + (i + 1) + ' = ' + whereStmt;
+      }), ' ;') + '\n          ' + '\n          ' + (_.size(whereStmts) === 1 ? 'let $inter = select intersect($1,$1);' : 'let $inter = select intersect(' + _.join(_.times(_.size(whereStmts), function (i) {
+        return '$' + (i + 1);
+      }), ', ') + ')') + '\n          ' + '\n          let $result = select ' + selectStmt + ' from $inter.intersect  ' + (orderByStmt ? 'ORDER BY ' + orderByStmt : '') + ' ' + (paginationStmt || '') + ';\n          return $result\n          ';
+    } else {
+      result = '\n      begin \n      let $result = select ' + selectStmt + ' from (' + _.first(whereStmts).substring(14, _.size(_.first(whereStmts)) - 1) + ' ' + (whereSlowAddition ? ' ' + (hasRootParams ? ' AND ' : ' WHERE ') + ' ' + whereSlowAddition + ' ' : '') + ' ' + (orderByStmt ? 'ORDER BY ' + orderByStmt + ' ' : '') + ' ' + (paginationStmt || '') + (hasRootParams ? ')' : '') + ';\n      commit;\n      return $result;';
+    }
     _.map(tempParams, function (value, property) {
       result = _.replace(result, new RegExp(':goldmine' + property, 'g'), typeof value === 'string' ? "'" + value + "'" : JSON.stringify(value));
     });
@@ -713,14 +708,14 @@ var edgeFinder = function edgeFinder(edgeObject) {
   }
 
   if (_.has(edgeObject, 'to.extend')) {
-    var _extendFields2 = buildExtends(edgeObject.to.extend, 'inV()');
-    selectStmt += (_.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(_extendFields2.selectStmt)) !== 0 ? ', ' : ' ') + ' ' + _extendFields2.selectStmt;
+    var _extendFields = buildExtends(edgeObject.to.extend, 'inV()');
+    selectStmt += (_.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(_extendFields.selectStmt)) !== 0 ? ', ' : ' ') + ' ' + _extendFields.selectStmt;
     if (_.size(whereStmt) !== 0) {
-      if (_.size(_extendFields2.whereStmt) !== 0) {
-        whereStmt += ' AND ' + _extendFields2.whereStmt;
+      if (_.size(_extendFields.whereStmt) !== 0) {
+        whereStmt += ' AND ' + _extendFields.whereStmt;
       }
     } else {
-      whereStmt = _extendFields2.whereStmt;
+      whereStmt = _extendFields.whereStmt;
     }
   }
 
