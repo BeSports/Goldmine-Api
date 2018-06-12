@@ -10,9 +10,14 @@ const selectBuilder = (template, noClear) => {
   if (typeof template === 'string') {
     return {
       statement: template,
-      statementParams: {},
+      statementParams: { class: 's' },
     };
-  } else if (template.fast) {
+  } else if (template.query) {
+    return {
+      statement: template.query,
+      statementParams: { class: 's' },
+    };
+  } else if (template.fast || template.new) {
     return {
       statement: newFastBuilder(template),
       statementParams: { class: 's' },
@@ -21,32 +26,17 @@ const selectBuilder = (template, noClear) => {
     if (!template.collection && global.logging) {
       console.log(`No collection name was provided to ${template}`);
     }
-
     let selectStmt = null;
     let fromStmt = null;
     let whereStmt = null;
+    let whereStmts = null;
     let orderByStmt = null;
     let paginationStmt = null;
+    let whereSlowAddition = null;
 
     // TOP LEVEL
     // select statement
     selectStmt = buildSelectStmt(template);
-
-    if (template.extend) {
-      const extendFields = buildExtends(template.extend, '');
-      selectStmt += `${
-        _.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0
-          ? ', '
-          : ' '
-      } ${extendFields.selectStmt}`;
-      if (_.size(whereStmt) !== 0) {
-        if (_.size(extendFields.whereStmt) !== 0) {
-          whereStmt += ` AND ${extendFields.whereStmt}`;
-        }
-      } else {
-        whereStmt = extendFields.whereStmt;
-      }
-    }
 
     // from statement
     fromStmt = template.collection;
@@ -297,15 +287,11 @@ const newFastBuilder = template => {
   if (typeof template === 'string') {
     result = template;
   } else if (template.query) {
-    let query = template.query;
-    result = query;
+    result = template.query;
   } else {
     if (!template.collection) {
       console.log(`No collection name was provided to ${template}`);
     }
-    let orderByStmt = null;
-    let paginationStmt = null;
-
     // TOP LEVEL
     // select statement
     let selectStmt = buildSelectStmt(template);
@@ -314,10 +300,13 @@ const newFastBuilder = template => {
     const whereStmts = createWherePaths(template);
 
     // order by statement
-    orderByStmt = buildOrderByStmt(template);
+    const orderByStmt = buildOrderByStmt(template);
 
     // pagination statement
-    paginationStmt = buildPaginationStmt(template);
+    const paginationStmt = buildPaginationStmt(template);
+
+    // optional for new:true
+    let whereSlowAddition = '';
 
     // EXTENDS
     if (template.extend) {
@@ -327,10 +316,17 @@ const newFastBuilder = template => {
           ? ', '
           : ' '
       } ${extendFields.selectStmt}`;
+      if (template.new && template.fast) {
+        const extendWhereFields = this.createSlowWheres(template.extend, '');
+        whereSlowAddition = extendWhereFields;
+      }
     }
 
+    const hasRootParams = _.has(template, 'params');
+
     // Add statement
-    result = `
+    if (!template.new) {
+      result = `
           begin
           ${/* insert the where clauses built before */ ''}
           ${_.join(
@@ -352,11 +348,25 @@ const newFastBuilder = template => {
           }
           ${/* Select the requested fields */ ''}
           let $result = select ${selectStmt} from $inter.intersect  ${
-      orderByStmt ? 'ORDER BY ' + orderByStmt : ''
-    } ${paginationStmt ? paginationStmt : ''};
+        orderByStmt ? `ORDER BY ${orderByStmt}` : ''
+      } ${paginationStmt || ''};
           return $result
           `;
-    _.map(tempParams, function(value, property) {
+    } else {
+      result = `
+      begin 
+      let $result = select ${selectStmt} from (${_.first(whereStmts).substring(
+        14,
+        _.size(_.first(whereStmts)) - 1,
+      )} ${
+        whereSlowAddition ? ` ${hasRootParams ? ' AND ' : ' WHERE '} ${whereSlowAddition} ` : ''
+      } ${orderByStmt ? `ORDER BY ${orderByStmt} ` : ''} ${paginationStmt || ''}${
+        hasRootParams ? ')' : ''
+      };
+      commit;
+      return $result;`;
+    }
+    _.map(tempParams, (value, property) => {
       result = _.replace(
         result,
         new RegExp(':goldmine' + property, 'g'),

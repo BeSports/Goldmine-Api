@@ -84,16 +84,20 @@ var handleResponse = function handleResponse(template, response) {
     // Add to cache
 
     _.forEach(obj, function (value, key) {
+      var convertedValue = value;
+      if (key.includes('@rid') && value instanceof Array) {
+        convertedValue = _.map(value, toString);
+      }
       if (key.startsWith('in_') || key.startsWith('out_') || !key.includes('§') || key.startsWith('_')) {
+        // skip all in or out edges
         if (key.startsWith('in_') || key.startsWith('out_')) {
           return;
         }
-        formattedObject[key] = key.startsWith('_id') ? value.toString() : value;
+        formattedObject[key] = key.startsWith('_id') ? convertedValue.toString() : convertedValue;
       } else if (_.size(template.extend) > 0) {
         var index = key.indexOf('§');
         var target = key.substr(0, index);
         var property = key.substr(index + 1);
-
         var tempExtend = '';
 
         _.forEach(flattenExtend(template.extend), function (extend) {
@@ -113,10 +117,10 @@ var handleResponse = function handleResponse(template, response) {
               formattedObject[target][key] = {};
             }
 
-            formattedObject[target][key][property] = property.startsWith('_id') ? item.toString() : item;
+            formattedObject[target][key][property] = property.startsWith('_id') || property.startsWith(' @rid') ? item.toString() : item;
           });
         } else {
-          _.set(formattedObject, target + '.' + _.replace(property, '§', '.'), _.isArray(value) && _.size(value) === 1 ? value[0] : value);
+          _.set(formattedObject, target + '.' + _.replace(property, '§', '.'), _.isArray(value) && _.size(value) === 1 ? property.includes('@rid') ? value[0].toString() : value[0] : property.includes('@rid') ? value.toString() : value);
         }
       }
     });

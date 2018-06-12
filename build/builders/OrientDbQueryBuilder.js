@@ -12,7 +12,12 @@ var selectBuilder = function selectBuilder(template, noClear) {
   if (typeof template === 'string') {
     return {
       statement: template,
-      statementParams: {}
+      statementParams: { class: 's' }
+    };
+  } else if (template.query) {
+    return {
+      statement: template.query,
+      statementParams: { class: 's' }
     };
   } else if (template.fast) {
     return {
@@ -23,12 +28,13 @@ var selectBuilder = function selectBuilder(template, noClear) {
     if (!template.collection && global.logging) {
       console.log('No collection name was provided to ' + template);
     }
-
     var selectStmt = null;
     var fromStmt = null;
     var whereStmt = null;
+    var whereStmts = null;
     var orderByStmt = null;
     var paginationStmt = null;
+    var whereSlowAddition = null;
 
     // TOP LEVEL
     // select statement
@@ -70,6 +76,8 @@ var selectBuilder = function selectBuilder(template, noClear) {
         whereStmt = _extendFields.whereStmt;
       }
     }
+
+    console.log(selectStmt);
 
     // Add statement
     statement = 'SELECT ' + selectStmt + ' FROM `' + fromStmt + '` ' + (whereStmt ? 'WHERE ' + whereStmt : '') + ' ' + (orderByStmt ? 'ORDER BY ' + orderByStmt : '') + ' ' + (paginationStmt ? paginationStmt : '');
