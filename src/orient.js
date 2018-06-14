@@ -50,6 +50,9 @@ const connect = (dbConfig, cb) => {
       `);
     }
   });
+  if (dbConfig.fast === true) {
+    db.alwaysFast = true;
+  }
 
   db.findOne = findOne.bind(null, db);
   db.find = find.bind(null, db);

@@ -47,6 +47,9 @@ var connect = function connect(dbConfig, cb) {
       console.log('\n        Reason: long query\n        Duration: ' + obj.perf.query + 'ms\n        Query: ' + obj.input.query + '\n        Params: ' + obj.input.params + '\n      ');
     }
   });
+  if (dbConfig.fast === true) {
+    db.alwaysFast = true;
+  }
 
   db.findOne = findOne.bind(null, db);
   db.find = find.bind(null, db);

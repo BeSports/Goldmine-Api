@@ -16,6 +16,7 @@ var _require = require('../builders/OrientDbQueryBuilder'),
     selectBuilder = _require.selectBuilder;
 
 var resolver = require('../resolvers/OrientDbQueryResolver');
+var _ = require('lodash');
 
 var find = function () {
   var _ref = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee(db, queryObject, logQuery) {
@@ -24,7 +25,7 @@ var find = function () {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            query = selectBuilder(queryObject);
+            query = selectBuilder(db.alwaysFast ? _.merge(queryObject, { fast: true }) : queryObject, false);
 
             if (logQuery === true) {
               console.log(query);
