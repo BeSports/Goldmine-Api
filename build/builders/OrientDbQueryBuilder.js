@@ -280,7 +280,7 @@ var newFastBuilder = function newFastBuilder(template) {
       var extendFields = buildExtends(template.extend, '');
       selectStmt += (_.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0 ? ', ' : ' ') + ' ' + extendFields.selectStmt;
       if (template.new && template.fast) {
-        var extendWhereFields = undefined.createSlowWheres(template.extend, '');
+        var extendWhereFields = createSlowWheres(template.extend, '');
         whereSlowAddition = extendWhereFields;
       }
     }
@@ -728,6 +728,40 @@ var edgeFinder = function edgeFinder(edgeObject) {
       acc['goldmine' + i] = cur;
       return acc;
     }, {})
+  };
+};
+
+var createSlowWheres = function createSlowWheres(extend) {
+  var extendFields = buildWhereExtends(_.drop(extend), '');
+  return extendFields.whereStmt;
+};
+
+var buildWhereExtends = function buildWhereExtends(extend, parent) {
+  // select statement
+  var whereStmt = '';
+  _.map(extend, function (e) {
+    var tempWhereStmt = buildWhereStmt(e, parent);
+    if (e.extend) {
+      var extendFields = buildWhereExtends(e.extend, (parent ? parent + '.' : '') + buildEdge(e.relation, e.direction));
+      if (_.size(whereStmt) !== 0) {
+        if (_.size(extendFields.whereStmt) !== 0) {
+          whereStmt += ' AND ' + extendFields.whereStmt;
+        }
+      } else {
+        whereStmt = extendFields.whereStmt;
+      }
+    }
+    if (_.size(whereStmt) !== 0) {
+      if (_.size(tempWhereStmt) !== 0) {
+        whereStmt += ' AND ' + tempWhereStmt;
+      }
+    } else {
+      whereStmt = tempWhereStmt;
+    }
+  });
+
+  return {
+    whereStmt: whereStmt
   };
 };
 

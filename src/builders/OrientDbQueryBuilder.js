@@ -317,7 +317,7 @@ const newFastBuilder = template => {
           : ' '
       } ${extendFields.selectStmt}`;
       if (template.new && template.fast) {
-        const extendWhereFields = this.createSlowWheres(template.extend, '');
+        const extendWhereFields = createSlowWheres(template.extend, '');
         whereSlowAddition = extendWhereFields;
       }
     }
@@ -889,6 +889,43 @@ const edgeFinder = edgeObject => {
       acc['goldmine' + i] = cur;
       return acc;
     }, {}),
+  };
+};
+
+const createSlowWheres = extend => {
+  const extendFields = buildWhereExtends(_.drop(extend), '');
+  return extendFields.whereStmt;
+};
+
+const buildWhereExtends = (extend, parent) => {
+  // select statement
+  let whereStmt = '';
+  _.map(extend, e => {
+    const tempWhereStmt = buildWhereStmt(e, parent);
+    if (e.extend) {
+      const extendFields = buildWhereExtends(
+        e.extend,
+        (parent ? `${parent}.` : '') + buildEdge(e.relation, e.direction),
+      );
+      if (_.size(whereStmt) !== 0) {
+        if (_.size(extendFields.whereStmt) !== 0) {
+          whereStmt += ` AND ${extendFields.whereStmt}`;
+        }
+      } else {
+        whereStmt = extendFields.whereStmt;
+      }
+    }
+    if (_.size(whereStmt) !== 0) {
+      if (_.size(tempWhereStmt) !== 0) {
+        whereStmt += ` AND ${tempWhereStmt}`;
+      }
+    } else {
+      whereStmt = tempWhereStmt;
+    }
+  });
+
+  return {
+    whereStmt,
   };
 };
 
