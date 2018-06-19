@@ -295,7 +295,7 @@ var newFastBuilder = function newFastBuilder(template) {
         return '$' + (i + 1);
       }), ', ') + ')') + '\n          ' + '\n          let $result = select ' + selectStmt + ' from $inter.intersect  ' + (orderByStmt ? 'ORDER BY ' + orderByStmt : '') + ' ' + (paginationStmt || '') + ';\n          return $result\n          ';
     } else {
-      result = '\n      begin \n      let $result = select ' + selectStmt + ' from (' + _.first(whereStmts).substring(14, _.size(_.first(whereStmts)) - 1) + ' ' + (whereSlowAddition ? ' ' + (hasRootParams ? ' AND ' : ' WHERE ') + ' ' + whereSlowAddition + ' ' : '') + ' ' + (orderByStmt ? 'ORDER BY ' + orderByStmt + ' ' : '') + ' ' + (paginationStmt || '') + (hasRootParams ? ')' : '') + ';\n      commit;\n      return $result;';
+      result = 'select ' + selectStmt + ' from (' + _.first(whereStmts).substring(14, _.size(_.first(whereStmts)) - 1) + ' ' + (whereSlowAddition ? ' ' + (hasRootParams ? ' AND ' : ' WHERE ') + ' ' + whereSlowAddition + ' ' : '') + ' ' + (orderByStmt ? 'ORDER BY ' + orderByStmt + ' ' : '') + ' ' + (paginationStmt || '') + (hasRootParams ? ')' : '') + ';';
     }
     _.map(tempParams, function (value, property) {
       result = _.replace(result, new RegExp(':goldmine' + property, 'g'), typeof value === 'string' ? "'" + value + "'" : JSON.stringify(value));

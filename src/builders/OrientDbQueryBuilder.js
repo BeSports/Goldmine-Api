@@ -353,18 +353,14 @@ const newFastBuilder = template => {
           return $result
           `;
     } else {
-      result = `
-      begin 
-      let $result = select ${selectStmt} from (${_.first(whereStmts).substring(
+      result = `select ${selectStmt} from (${_.first(whereStmts).substring(
         14,
         _.size(_.first(whereStmts)) - 1,
       )} ${
         whereSlowAddition ? ` ${hasRootParams ? ' AND ' : ' WHERE '} ${whereSlowAddition} ` : ''
       } ${orderByStmt ? `ORDER BY ${orderByStmt} ` : ''} ${paginationStmt || ''}${
         hasRootParams ? ')' : ''
-      };
-      commit;
-      return $result;`;
+      };`;
     }
     _.map(tempParams, (value, property) => {
       result = _.replace(
