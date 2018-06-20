@@ -744,6 +744,10 @@ const updateEdgeBuilder = (edgeObject, mergeObject) => {
     whereStmt += edgeWhereBuilder(edgeObject.to, 'in');
   }
   if (whereStmt === '' && edgeObject.rid) {
+    if (_.size(edgeObject.rid) === 0) {
+      console.warn('Trying to update all edges in database, aborted.');
+      throw new Error('Trying to update all edges in database, aborted.');
+    }
     edgeToUpdate = edgeObject.rid;
   }
 
@@ -804,6 +808,10 @@ const deleteEdge = edgeObject => {
 
   // Add statement
   if (fromStmt === '' && toStmt === '' && edgeObject.rid) {
+    if (_.size(edgeObject.rid) === 0) {
+      console.warn('Trying to update all edges in database, aborted.');
+      throw new Error('Trying to update all edges in database, aborted.');
+    }
     statement = `DELETE EDGE  ${
       _.isArray(edgeObject.rid) ? `[ ${edgeObject.rid} ]` : `${edgeObject.rid}`
     }`;

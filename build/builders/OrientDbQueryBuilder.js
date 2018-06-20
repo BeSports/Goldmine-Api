@@ -599,6 +599,10 @@ var updateEdgeBuilder = function updateEdgeBuilder(edgeObject, mergeObject) {
     whereStmt += edgeWhereBuilder(edgeObject.to, 'in');
   }
   if (whereStmt === '' && edgeObject.rid) {
+    if (_.size(edgeObject.rid) === 0) {
+      console.warn('Trying to update all edges in database, aborted.');
+      throw new Error('Trying to update all edges in database, aborted.');
+    }
     edgeToUpdate = edgeObject.rid;
   }
 
@@ -657,6 +661,10 @@ var deleteEdge = function deleteEdge(edgeObject) {
 
   // Add statement
   if (fromStmt === '' && toStmt === '' && edgeObject.rid) {
+    if (_.size(edgeObject.rid) === 0) {
+      console.warn('Trying to update all edges in database, aborted.');
+      throw new Error('Trying to update all edges in database, aborted.');
+    }
     statement = 'DELETE EDGE  ' + (_.isArray(edgeObject.rid) ? '[ ' + edgeObject.rid + ' ]' : '' + edgeObject.rid);
   } else {
     statement = 'DELETE EDGE  ' + (fromStmt ? 'FROM (' + fromStmt + ') ' : '') + ' ' + (toStmt ? 'TO (' + toStmt + ') ' : '') + '  ' + (whereStmt ? 'WHERE ' + whereStmt : '') + ' ' + (paginationStmt || '') + ';';

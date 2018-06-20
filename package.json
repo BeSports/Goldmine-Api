@@ -1,6 +1,6 @@
 {
   "name": "goldmine-api",
-  "version": "0.3.27",
+  "version": "0.3.28",
   "description": "Goldmine query language to optimize querying Orient databases Edit",
   "main": "./build/orient.js",
   "scripts": {
