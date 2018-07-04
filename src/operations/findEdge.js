@@ -8,7 +8,7 @@ const findEdge = async (db, queryObject, logQuery) => {
   if (logQuery === true) {
     console.log(query);
   }
-  const res = await resolver(db, query.statement, query.statementParams, {}, false, logQuery);
+  const res = await resolver(db, query.statement, { class: 's' }, {}, false, logQuery);
   return res;
 };
 

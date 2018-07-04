@@ -248,6 +248,8 @@ var pureEdgesBuilder = function pureEdgesBuilder(edgeObject) {
 };
 
 var newFastBuilder = function newFastBuilder(template) {
+  var fixedSelect = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
   var result = '';
 
   tempParams = [];
@@ -287,15 +289,14 @@ var newFastBuilder = function newFastBuilder(template) {
 
     var hasRootParams = _.has(template, 'params');
 
-    // Add statement
     if (!template.new) {
       result = '\n          begin\n          ' + '\n          ' + _.join(_.map(whereStmts, function (whereStmt, i) {
         return 'let $' + (i + 1) + ' = ' + whereStmt;
       }), ' ;') + '\n          ' + '\n          ' + (_.size(whereStmts) === 1 ? 'let $inter = select intersect($1,$1);' : 'let $inter = select intersect(' + _.join(_.times(_.size(whereStmts), function (i) {
         return '$' + (i + 1);
-      }), ', ') + ')') + '\n          ' + '\n          let $result = select ' + selectStmt + ' from $inter.intersect  ' + (orderByStmt ? 'ORDER BY ' + orderByStmt : '') + ' ' + (paginationStmt || '') + ';\n          return $result\n          ';
+      }), ', ') + ')') + '\n          ' + '\n          let $result = select ' + (fixedSelect || selectStmt) + ' from $inter.intersect  ' + (orderByStmt ? 'ORDER BY ' + orderByStmt : '') + ' ' + (paginationStmt || '') + ';\n          return $result\n          ';
     } else {
-      result = 'select ' + selectStmt + ' from (' + _.first(whereStmts).substring(14, _.size(_.first(whereStmts)) - 1) + ' ' + (whereSlowAddition ? ' ' + (hasRootParams ? ' AND ' : ' WHERE ') + ' ' + whereSlowAddition + ' ' : '') + ' ' + (orderByStmt ? 'ORDER BY ' + orderByStmt + ' ' : '') + ' ' + (paginationStmt || '') + (hasRootParams ? ')' : '') + ';';
+      result = 'select ' + (fixedSelect || selectStmt) + ' from ' + (fixedSelect === false ? '(' : '') + _.first(whereStmts).substring(14, _.size(_.first(whereStmts)) - 1) + ' ' + (whereSlowAddition ? ' ' + (hasRootParams ? ' AND ' : ' WHERE ') + ' ' + whereSlowAddition + ' ' : '') + ' ' + (orderByStmt ? 'ORDER BY ' + orderByStmt + ' ' : '') + ' ' + (paginationStmt || '') + (hasRootParams ? ')' : '') + ';';
     }
     _.map(tempParams, function (value, property) {
       result = _.replace(result, new RegExp(':goldmine' + property, 'g'), typeof value === 'string' ? "'" + value + "'" : JSON.stringify(value));
@@ -681,61 +682,45 @@ var deleteEdge = function deleteEdge(edgeObject) {
 
 var edgeFinder = function edgeFinder(edgeObject) {
   tempParams = [];
-  var statement = void 0;
   if (!edgeObject.edge && global.logging) {
     console.log('No edge name was provided to ' + edgeObject);
   }
-
   var selectStmt = '' + buildSelectStmt(edgeObject);
-  var whereStmt = '';
+  var whereStmt = buildObject(edgeObject.params, '');
   var fromStmt = '';
-  // TOP LEVEL
-  // from statement
-  fromStmt = edgeObject.edge;
+  var toStmt = '';
+  var fromObject = void 0;
+  var toObject = void 0;
 
-  // where statement
+  // order by statement
+  var orderByStmt = buildOrderByStmt(edgeObject);
+
+  // pagination statement
+  var paginationStmt = buildPaginationStmt(edgeObject);
+
   if (edgeObject.from) {
-    whereStmt += edgeWhereBuilder(edgeObject.from, 'outV()');
-  }
-  if (_.has(edgeObject, 'from.extend')) {
-    var extendFields = buildExtends(edgeObject.from.extend, 'outV()');
-    selectStmt += (_.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0 ? ', ' : ' ') + ' ' + extendFields.selectStmt;
-    if (_.size(whereStmt) !== 0) {
-      if (_.size(extendFields.whereStmt) !== 0) {
-        whereStmt += ' AND ' + extendFields.whereStmt;
-      }
-    } else {
-      whereStmt = extendFields.whereStmt;
-    }
+    fromObject = '' + newFastBuilder(_.merge(edgeObject.from, { new: true, fast: true }), 'outE(\'' + edgeObject.edge + '\') as out');
   }
   if (edgeObject.to) {
-    if (whereStmt !== '') {
-      whereStmt += ' AND ';
-    }
-    whereStmt += edgeWhereBuilder(edgeObject.to, 'inV()');
+    toObject = '' + newFastBuilder(_.merge(edgeObject.to, { new: true, fast: true }), 'inE(\'' + edgeObject.edge + '\') as in');
   }
-
-  if (_.has(edgeObject, 'to.extend')) {
-    var _extendFields = buildExtends(edgeObject.to.extend, 'inV()');
-    selectStmt += (_.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(_extendFields.selectStmt)) !== 0 ? ', ' : ' ') + ' ' + _extendFields.selectStmt;
-    if (_.size(whereStmt) !== 0) {
-      if (_.size(_extendFields.whereStmt) !== 0) {
-        whereStmt += ' AND ' + _extendFields.whereStmt;
-      }
-    } else {
-      whereStmt = _extendFields.whereStmt;
-    }
-  }
+  var intersection = 'let $1 = ' + (fromObject !== '' ? fromObject : toObject) + '\n  let $2 = ' + (toObject !== '' ? toObject : fromObject) + '\n  let $inter = select intersect($1.out, $2.in);';
 
   // Add statement
-  statement = 'SELECT ' + selectStmt + ' FROM `' + fromStmt + '` ' + (whereStmt ? 'WHERE ' + whereStmt : '') + ' ' + (edgeObject.limit ? 'LIMIT ' + edgeObject.limit : '');
+  var statement = intersection + '   \n  SELECT ' + selectStmt + ' FROM $inter.intersect ' + (whereStmt !== '(' ? ' WHERE ' + whereStmt : '') + '  ' + (orderByStmt ? ' ORDER BY ' + orderByStmt : '') + ' ' + (paginationStmt || '');
+
+  _.map(tempParams, function (value, property) {
+    statement = _.replace(statement, new RegExp(':goldmine' + property, 'g'), typeof value === 'string' ? "'" + value + "'" : JSON.stringify(value));
+  });
 
   return {
     statement: statement,
-    statementParams: tempParams.reduce(function (acc, cur, i) {
-      acc['goldmine' + i] = cur;
-      return acc;
-    }, {})
+    statementParams: { class: 's' }
+
+    // statementParams: tempParams.reduce((acc, cur, i) => {
+    //   acc['goldmine' + i] = cur;
+    //   return acc;
+    // }, {}),
   };
 };
 

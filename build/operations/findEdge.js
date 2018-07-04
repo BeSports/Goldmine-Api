@@ -31,7 +31,7 @@ var findEdge = function () {
               console.log(query);
             }
             _context.next = 4;
-            return resolver(db, query.statement, query.statementParams, {}, false, logQuery);
+            return resolver(db, query.statement, { class: 's' }, {}, false, logQuery);
 
           case 4:
             res = _context.sent;

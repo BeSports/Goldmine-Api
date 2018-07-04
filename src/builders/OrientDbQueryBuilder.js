@@ -280,7 +280,7 @@ const pureEdgesBuilder = edgeObject => {
   return query;
 };
 
-const newFastBuilder = template => {
+const newFastBuilder = (template, fixedSelect = false) => {
   let result = '';
 
   tempParams = [];
@@ -324,7 +324,6 @@ const newFastBuilder = template => {
 
     const hasRootParams = _.has(template, 'params');
 
-    // Add statement
     if (!template.new) {
       result = `
           begin
@@ -347,16 +346,15 @@ const newFastBuilder = template => {
                 )})`
           }
           ${/* Select the requested fields */ ''}
-          let $result = select ${selectStmt} from $inter.intersect  ${
+          let $result = select ${fixedSelect || selectStmt} from $inter.intersect  ${
         orderByStmt ? `ORDER BY ${orderByStmt}` : ''
       } ${paginationStmt || ''};
           return $result
           `;
     } else {
-      result = `select ${selectStmt} from (${_.first(whereStmts).substring(
-        14,
-        _.size(_.first(whereStmts)) - 1,
-      )} ${
+      result = `select ${fixedSelect || selectStmt} from ${
+        fixedSelect === false ? '(' : ''
+      }${_.first(whereStmts).substring(14, _.size(_.first(whereStmts)) - 1)} ${
         whereSlowAddition ? ` ${hasRootParams ? ' AND ' : ' WHERE '} ${whereSlowAddition} ` : ''
       } ${orderByStmt ? `ORDER BY ${orderByStmt} ` : ''} ${paginationStmt || ''}${
         hasRootParams ? ')' : ''
@@ -832,67 +830,60 @@ const deleteEdge = edgeObject => {
 
 const edgeFinder = edgeObject => {
   tempParams = [];
-  let statement;
   if (!edgeObject.edge && global.logging) {
     console.log(`No edge name was provided to ${edgeObject}`);
   }
-
   let selectStmt = '' + buildSelectStmt(edgeObject);
-  let whereStmt = '';
+  let whereStmt = buildObject(edgeObject.params, '');
   let fromStmt = '';
-  // TOP LEVEL
-  // from statement
-  fromStmt = edgeObject.edge;
+  let toStmt = '';
+  let fromObject;
+  let toObject;
 
-  // where statement
+  // order by statement
+  let orderByStmt = buildOrderByStmt(edgeObject);
+
+  // pagination statement
+  let paginationStmt = buildPaginationStmt(edgeObject);
+
   if (edgeObject.from) {
-    whereStmt += edgeWhereBuilder(edgeObject.from, 'outV()');
-  }
-  if (_.has(edgeObject, 'from.extend')) {
-    const extendFields = buildExtends(edgeObject.from.extend, 'outV()');
-    selectStmt += `${
-      _.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0 ? ', ' : ' '
-    } ${extendFields.selectStmt}`;
-    if (_.size(whereStmt) !== 0) {
-      if (_.size(extendFields.whereStmt) !== 0) {
-        whereStmt += ` AND ${extendFields.whereStmt}`;
-      }
-    } else {
-      whereStmt = extendFields.whereStmt;
-    }
+    fromObject = `${newFastBuilder(
+      _.merge(edgeObject.from, { new: true, fast: true }),
+      `outE('${edgeObject.edge}') as out`,
+    )}`;
   }
   if (edgeObject.to) {
-    if (whereStmt !== '') {
-      whereStmt += ' AND ';
-    }
-    whereStmt += edgeWhereBuilder(edgeObject.to, 'inV()');
+    toObject = `${newFastBuilder(
+      _.merge(edgeObject.to, { new: true, fast: true }),
+      `inE('${edgeObject.edge}') as in`,
+    )}`;
   }
-
-  if (_.has(edgeObject, 'to.extend')) {
-    const extendFields = buildExtends(edgeObject.to.extend, 'inV()');
-    selectStmt += `${
-      _.size(_.trim(selectStmt)) !== 0 && _.size(_.trim(extendFields.selectStmt)) !== 0 ? ', ' : ' '
-    } ${extendFields.selectStmt}`;
-    if (_.size(whereStmt) !== 0) {
-      if (_.size(extendFields.whereStmt) !== 0) {
-        whereStmt += ` AND ${extendFields.whereStmt}`;
-      }
-    } else {
-      whereStmt = extendFields.whereStmt;
-    }
-  }
+  const intersection = `let $1 = ${fromObject !== '' ? fromObject : toObject}
+  let $2 = ${toObject !== '' ? toObject : fromObject}
+  let $inter = select intersect($1.out, $2.in);`;
 
   // Add statement
-  statement = `SELECT ${selectStmt} FROM \`${fromStmt}\` ${whereStmt ? 'WHERE ' + whereStmt : ''} ${
-    edgeObject.limit ? 'LIMIT ' + edgeObject.limit : ''
-  }`;
+  let statement = `${intersection}   
+  SELECT ${selectStmt} FROM $inter.intersect ${whereStmt !== '(' ? ' WHERE ' + whereStmt : ''}  ${
+    orderByStmt ? ' ORDER BY ' + orderByStmt : ''
+  } ${paginationStmt || ''}`;
+
+  _.map(tempParams, (value, property) => {
+    statement = _.replace(
+      statement,
+      new RegExp(':goldmine' + property, 'g'),
+      typeof value === 'string' ? "'" + value + "'" : JSON.stringify(value),
+    );
+  });
 
   return {
     statement,
-    statementParams: tempParams.reduce((acc, cur, i) => {
-      acc['goldmine' + i] = cur;
-      return acc;
-    }, {}),
+    statementParams: { class: 's' },
+
+    // statementParams: tempParams.reduce((acc, cur, i) => {
+    //   acc['goldmine' + i] = cur;
+    //   return acc;
+    // }, {}),
   };
 };
 
