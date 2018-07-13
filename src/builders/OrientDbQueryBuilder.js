@@ -355,10 +355,10 @@ const newFastBuilder = (template, fixedSelect = false) => {
       result = `select ${fixedSelect || selectStmt} from ${
         fixedSelect === false ? '(' : ''
       }${_.first(whereStmts).substring(14, _.size(_.first(whereStmts)) - 1)} ${
-        whereSlowAddition ? ` ${hasRootParams ? ' AND ' : ' WHERE '} ${whereSlowAddition} ` : ''
-      } ${orderByStmt ? `ORDER BY ${orderByStmt} ` : ''} ${paginationStmt || ''}${
         hasRootParams ? ')' : ''
-      };`;
+        } ${
+        whereSlowAddition ? ` ${hasRootParams ? ' AND ' : ' WHERE '} ${whereSlowAddition} ` : ''
+      } ${orderByStmt ? `ORDER BY ${orderByStmt} ` : ''} ${paginationStmt || ''};`;
     }
     _.map(tempParams, (value, property) => {
       result = _.replace(
