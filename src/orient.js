@@ -41,7 +41,14 @@ const connect = (dbConfig, cb) => {
   });
 
   db.on('endQuery', obj => {
-    if (global.logging && obj.perf.query > 500) {
+    if (global.logging === 'all') {
+      console.log(`
+        ${obj.perf.query > 500 && 'LONG QUERY!'}
+        Duration: ${obj.perf.query}ms
+        Query: ${obj.input.query}
+        Params: ${obj.input.params}
+      `);
+    } else if (global.logging && obj.perf.query > 500) {
       console.log(`
         Reason: long query
         Duration: ${obj.perf.query}ms

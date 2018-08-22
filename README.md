@@ -33,7 +33,7 @@ const dbOptions = {
       }
     ], // servers are defined in an array following the official documentation: http://orientdb.com/docs/last/OrientJS-Server.html#using-distributed-databases
   name: 'mydatabase', // name of your database on orient
-  logging: true, //enables logging of long queries and errors
+  logging: true, //enables logging of long queries and errors - logging: 'all' logs everything
 };
 
 require('goldmine-api').connect(dbOptions, (db) => {

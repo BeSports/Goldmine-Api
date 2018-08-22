@@ -43,7 +43,9 @@ var connect = function connect(dbConfig, cb) {
   });
 
   db.on('endQuery', function (obj) {
-    if (global.logging && obj.perf.query > 500) {
+    if (global.logging === 'all') {
+      console.log('\n        ' + (obj.perf.query > 500 && 'LONG QUERY!') + '\n        Duration: ' + obj.perf.query + 'ms\n        Query: ' + obj.input.query + '\n        Params: ' + obj.input.params + '\n      ');
+    } else if (global.logging && obj.perf.query > 500) {
       console.log('\n        Reason: long query\n        Duration: ' + obj.perf.query + 'ms\n        Query: ' + obj.input.query + '\n        Params: ' + obj.input.params + '\n      ');
     }
   });
